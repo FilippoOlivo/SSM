@@ -15,3 +15,22 @@ def compute_hippo(N):
         torch.arange(N, dtype=torch.float32)
     )
     return -A
+
+
+def compute_dplr(A):
+    """
+    TODO
+    """
+    # Compute p and q in a vectorized manner
+    N = A.shape[0]
+    indices = torch.arange(1, N + 1, dtype=torch.float32)
+    p = 0.5 * torch.sqrt(2 * indices + 1.0)
+    q = 2 * p
+    # Construct S efficiently
+    S = A + p[:, None] * q[None, :]
+    Lambda, V = torch.linalg.eig(S)
+    Vc = V.conj().T
+    p, q = p.to(Vc.dtype), q.to(Vc.dtype)
+    p = Vc @ p
+    q = Vc @ q
+    return Lambda, p, q

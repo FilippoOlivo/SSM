@@ -1,4 +1,5 @@
 import torch
+from torch.func import vmap
 from .block.s4_base_block import S4BaseBlock
 
 
@@ -59,8 +60,7 @@ class S4(torch.nn.Module):
         y = []
 
         # Apply each block to the input tensor
-        for i, block in enumerate(self.blocks):
-            y.append(block(x[..., i]))
+        y = vmap(lambda blk, xi: blk(xi), (0, -1))(torch.stack(self.blocks), x)
         y = torch.cat(y, dim=-1)
 
         # Apply the mixing layer
