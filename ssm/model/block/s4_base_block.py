@@ -4,7 +4,7 @@ from ...utils import compute_hippo
 
 
 class S4BaseBlock(torch.nn.Module):
-    """
+    r"""
     Implementation of the S4 block.
 
     This block supports three forward pass methods: continuous, recurrent, and
@@ -114,52 +114,8 @@ class S4BaseBlock(torch.nn.Module):
         """
         tmp = self.I + self.A * self.dt / 2
         tmp2 = self.I - self.A * self.dt / 2
-
-        # Compute inverse for each channel in batch
-        inverse_tmp2 = torch.linalg.inv(tmp2)
-        self.A_bar = torch.bmm(inverse_tmp2, tmp)
-        self.B_bar = torch.bmm(inverse_tmp2, self.B) * self.dt
-
-    # def forward_continuous(self, x):
-    #     """
-    #     Batch-optimized continuous-time forward pass.
-
-    #     :param torch.Tensor x: Input tensor with shape [B, L, input_dim]
-    #     :return: Output tensor with shape [B, L, input_dim]
-    #     """
-    #     batch_size, seq_len = x.shape[0], x.shape[1]
-
-    #     # Reshape input to [input_dim, B, L, 1]
-    #     x_reshaped = x.permute(2, 0, 1).unsqueeze(-1)
-
-    #     # Initialize output and hidden states
-    #     y = torch.zeros(self.input_dim, batch_size, seq_len, 1, device=x.device)
-    #     h = torch.zeros(
-    #         self.input_dim,
-    #         batch_size,
-    #         seq_len + 1,
-    #         self.hidden_dim,
-    #         device=x.device,
-    #     )
-
-    #     # Compute for all channels in parallel
-    #     for t in range(seq_len):
-    #         # Ah + Bx for all channels at once
-    #         h_t = h[:, :, t].reshape(
-    #             self.input_dim, batch_size, self.hidden_dim, 1
-    #         )
-    #         Ah = torch.matmul(self.A, h_t).squeeze(-1)
-    #         Bx = torch.matmul(self.B, x_reshaped[:, :, t : t + 1]).squeeze(-1)
-
-    #         h[:, :, t + 1] = Ah + Bx
-
-    #         # Ch for all channels at once
-    #         y[:, :, t] = torch.matmul(
-    #             self.C, h[:, :, t + 1].unsqueeze(-1)
-    #         ).squeeze(-1)
-
-    #     # Reshape back to [B, L, input_dim]
-    #     return y.permute(1, 2, 0).squeeze(-1)
+        self.A_bar = tmp2.inverse() @ tmp
+        self.B_bar = tmp2.inverse() @ self.B * self.dt
 
     def forward_recurrent(self, x):
         """
@@ -189,11 +145,10 @@ class S4BaseBlock(torch.nn.Module):
         for t in range(seq_len):
             x_t = x[:, t, :]  # [B, input_dim]
             h_t = h.transpose(0, 1)  # [input_dim, B, hidden_dim]
-
-            Ah = torch.bmm(h_t, self.A_bar.transpose(1, 2))
+            Ah = torch.bmm(h_t, self.A_bar.transpose(1, 2)).transpose(0, 1)
             Bx = x_t.unsqueeze(-1) * self.B_bar.squeeze(-1).unsqueeze(0)
-            h = Ah.transpose(0, 1) + Bx
-            h_out = h.transpose(0, 1)  # [input_dim, B, hidden_dim]
+            h = Ah + Bx
+            h_out = h.transpose(0, 1)
             Ch = torch.bmm(h_out, self.C.transpose(1, 2))
             y[:, t, :] = Ch.transpose(0, 1).squeeze(-1)
 
@@ -218,7 +173,7 @@ class S4BaseBlock(torch.nn.Module):
         for i in range(L):
             # Calculate C·A^i·B for all channels
             # Output shape: [input_dim, 1, 1]
-            CAB = torch.bmm(self.C, torch.bmm(A_pow, self.B_bar))
+            CAB = torch.bmm(torch.bmm(self.C, A_pow), self.B_bar)
 
             # Store in kernel tensor (squeeze to get scalar value per channel)
             K[:, i] = CAB.squeeze(-1).squeeze(-1)
@@ -243,7 +198,6 @@ class S4BaseBlock(torch.nn.Module):
         x_reshaped = x.transpose(1, 2)
 
         K = self._compute_K(seq_len)
-        print(K.shape)
         total_length = 2 * seq_len
 
         # Pad input and kernel to avoid circular convolution effects
