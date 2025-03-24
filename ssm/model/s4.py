@@ -25,9 +25,7 @@ class S4(torch.nn.Module):
         DOI: `<https://doi.org/10.48550/arXiv.2111.00396>_`.
     """
 
-    def __init__(
-        self, method, input_dim, output_dim, hidden_dim, hippo=True, fixed=False
-    ):
+    def __init__(self, method, input_dim, output_dim, hidden_dim, hippo=True):
         """
         Initialization of the S4 model.
 
@@ -37,7 +35,6 @@ class S4(torch.nn.Module):
         :param int output_dim: The output dimension.
         :param int hidden_dim: The hidden dimension.
         :param bool hippo: Whether to use the Hippocampus mechanism.
-        :param bool fixed: Whether to use fixed weights.
         """
         super().__init__()
 

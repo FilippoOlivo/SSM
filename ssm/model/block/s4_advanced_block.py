@@ -30,14 +30,10 @@ class S4AdvandedBlock(nn.Module):
             self.Q = self.Q.repeat(input_dim, 1)
         else:
             self.Lambda = torch.nn.Parameter(
-                torch.rand(1, input_dim, hidden_dim)
+                torch.rand(input_dim, 1, hidden_dim)
             )
-            self.P = torch.nn.Parameter(
-                torch.rand(input_dim, hidden_dim, hidden_dim)
-            )
-            self.Q = torch.nn.Parameter(
-                torch.rand(input_dim, hidden_dim, hidden_dim)
-            )
+            self.P = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))
+            self.Q = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))
         self.register_buffer("omega", self._init_omega(L))
         self.dt = torch.tensor([dt])
         self.hidden_dim = hidden_dim

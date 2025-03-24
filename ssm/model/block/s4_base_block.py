@@ -96,16 +96,14 @@ class S4BaseBlock(torch.nn.Module):
 
         self.B = torch.nn.Parameter(torch.rand(input_dim, hidden_dim, 1))
         self.C = torch.nn.Parameter(torch.rand(input_dim, 1, hidden_dim))
-
-        if method != "continuous":
-            self.register_buffer(
-                "I",
-                torch.eye(hidden_dim).unsqueeze(0).expand(input_dim, -1, -1),
-            )
-            self.register_buffer(
-                "A_bar", torch.zeros(input_dim, hidden_dim, hidden_dim)
-            )
-            self.register_buffer("B_bar", torch.zeros(input_dim, hidden_dim, 1))
+        self.register_buffer(
+            "I",
+            torch.eye(hidden_dim).unsqueeze(0).expand(input_dim, -1, -1),
+        )
+        self.register_buffer(
+            "A_bar", torch.zeros(input_dim, hidden_dim, hidden_dim)
+        )
+        self.register_buffer("B_bar", torch.zeros(input_dim, hidden_dim, 1))
 
     def discretize(self):
         """

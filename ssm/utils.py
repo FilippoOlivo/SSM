@@ -14,7 +14,7 @@ def compute_hippo(N):
     A = torch.tril(A, diagonal=-1)
     diag_indices = torch.arange(N) + 1
     A = A - torch.diag(diag_indices)
-    return -A 
+    return -A
 
 
 def compute_hippo(N):
@@ -25,14 +25,23 @@ def compute_hippo(N):
     :return: A (N, N) matrix initialized using the HIPPO method
     :rtype: torch.Tensor
     """
-    P = torch.sqrt(torch.arange(1, 2 * N, 2,))
-    A = 0.5 * (P[:, None] * P[None, :])  # Outer product (equivalent to broadcasting)
+    P = torch.sqrt(
+        torch.arange(
+            1,
+            2 * N,
+            2,
+        )
+    )
+    A = 0.5 * (
+        P[:, None] * P[None, :]
+    )  # Outer product (equivalent to broadcasting)
     A = torch.tril(A, diagonal=-1)
-    A = A + torch.diag(torch.arange(1, N+1 ))
+    A = A + torch.diag(torch.arange(1, N + 1))
 
     return -A
 
-def compute_hippo_diagonal(N):
+
+def compute_hippo_diagonal(N, complex):
     """
     Constructs the diagonal of the HIPPO hidden-to-hidden matrix A.
 
@@ -40,7 +49,10 @@ def compute_hippo_diagonal(N):
     :return: The diagonal of the HIPPO matrix A.
     :rtype: torch.Tensor
     """
+    if complex:
+        return -0.5 + 1j * torch.pi * torch.arange(N)
     return -torch.arange(1, N + 1, dtype=torch.float32)
+
 
 def compute_dplr(A):
     """
