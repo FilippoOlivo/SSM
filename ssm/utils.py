@@ -41,17 +41,48 @@ def compute_hippo(N):
     return -A
 
 
-def compute_hippo_diagonal(N, complex):
+def compute_S4DInv(N):
     """
-    Constructs the diagonal of the HIPPO hidden-to-hidden matrix A.
+    Constructs the S4D-Inv matrix A, represented as a 1-D torch.Tensor.
 
-    :param int N: The size of the HIPPO matrix.
-    :return: The diagonal of the HIPPO matrix A.
+    :param int hidden_dim: The size of the matrix.
+    :return: A matrix initialized using the S4D-Inv method.
     :rtype: torch.Tensor
     """
-    if complex:
-        return -0.5 + 1j * torch.pi * torch.arange(N)
-    return -torch.arange(1, N + 1, dtype=torch.float32)
+    n = torch.arange(N, dtype=torch.float32)
+    return -0.5 + 1j * (N / torch.pi) * (N / (2 * n + 1) - 1)
+
+
+def compute_S4DLin(N):
+    """
+    Constructs the S4D-Lin hidden-to-hidden matrix A.
+    :param int N: The size of the matrix.
+    :return: A matrix initialized using the S4D-Inv method.
+    :rtype: torch.Tensor
+    """
+    n = torch.arange(N, dtype=torch.float32)
+    return -0.5 + 1j * (n * torch.pi)
+
+
+def compute_S4DQuad(N):
+    """
+    Constructs the S4D-Quad hidden-to-hidden matrix A.
+    :param int N: The size of the matrix.
+    :return: A matrix initialized using the S4D-Inv method.
+    :rtype: torch.Tensor
+    """
+    n = torch.arange(N, dtype=torch.float32)
+    return 1 / torch.pi * (1 + 2 * n) ** 2
+
+
+def compute_S4DReal(N):
+    """
+    Constructs the S4D-Real hidden-to-hidden matrix A.
+    :param int N: The size of the matrix.
+    :return: A matrix initialized using the S4D-Inv method.
+    :rtype: torch.Tensor
+    """
+    return -(torch.rand(N) + 1)
 
 
 def compute_dplr(A):

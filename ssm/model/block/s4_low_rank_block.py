@@ -14,14 +14,15 @@ class S4LowRankBlock(nn.Module):
         self,
         input_dim: int,
         hidden_dim: int,
-        method: str = 'convolutional',
+        method: str = "convolutional",
         dt: float = 0.1,
         hippo: bool = True,
     ):
         super().__init__()
-        if method != 'convolutional':
-            raise NotImplemented("S4LowRankBlock supports only 'convolutional"
-            " method")
+        if method != "convolutional":
+            raise NotImplementedError(
+                "S4LowRankBlock supports only 'convolutional method"
+            )
         A = compute_hippo(hidden_dim)
         # Define parameters
         self.B = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))

@@ -1,6 +1,6 @@
 import torch
 from torch.nn.functional import pad
-from ...utils import compute_hippo_diagonal
+from ...utils import compute_S4DInv, compute_S4DLin, compute_S4DQuad
 
 
 class S4DBlock(torch.nn.Module):
@@ -24,22 +24,18 @@ class S4DBlock(torch.nn.Module):
         input_dim,
         hidden_dim,
         dt=0.1,
-        hippo=False,
+        initialization="S4D-Inv",
         discretization="bilinear",
-        complex=False,
     ):
         super().__init__()
 
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.dt = dt
-        dtype = torch.complex64 if complex else torch.float32
 
-        if hippo:
-            A = compute_hippo_diagonal(hidden_dim, complex=complex)
-            A = A.unsqueeze(0).expand(input_dim, -1).clone()
-        else:
-            A = torch.rand(input_dim, hidden_dim, dtype=dtype)
+        A = self.initialize_A(hidden_dim, init_method=initialization)
+        A = A.unsqueeze(0).repeat(input_dim, 1).clone()
+        dtype = A.dtype
 
         self.A = torch.nn.Parameter(A)
         self.B = torch.nn.Parameter(
@@ -62,6 +58,23 @@ class S4DBlock(torch.nn.Module):
             self.discretize = self._discretize_zoh
         else:
             raise ValueError(f"Unknown discretization method: {discretization}")
+
+    @staticmethod
+    def initialize_A(hidden_dim, init_method="S4D-Inv"):
+        if init_method == "S4D-Inv":
+            return compute_S4DInv(hidden_dim)
+        elif init_method == "S4D-Lin":
+            return compute_S4DLin(hidden_dim)
+        elif init_method == "S4D-Quad":
+            return compute_S4DQuad(hidden_dim)
+        elif init_method == "S4D-Real":
+            return compute_S4DQuad(hidden_dim)
+        elif init_method == "real":
+            return torch.rand(hidden_dim)
+        elif init_method == "complex":
+            return torch.rand(hidden_dim) + 1j * torch.rand(hidden_dim)
+        else:
+            raise ValueError(f"Unknown initialization method: {init_method}")
 
     def _discretize_bilinear(self):
         tmp = 1 + self.A * self.dt / 2

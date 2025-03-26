@@ -6,17 +6,15 @@ x = torch.rand(1000, 25, 5)
 
 
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
-@pytest.mark.parametrize("hippo", [True, False])
-@pytest.mark.parametrize("complex", [True, False])
+@pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad", "real", "complex"])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4d_constructor(method, hippo, complex, discretisation):
+def test_s4d_constructor(method, init_method, discretisation):
     model = S4DBlock(
         method=method,
         hidden_dim=10,
-        hippo=hippo,
         input_dim=5,
-        complex=complex,
         discretization=discretisation,
+        initialization=init_method
     )
     assert model.A.shape == (5, 10)
     assert model.B.shape == (5, 10)
@@ -26,32 +24,28 @@ def test_s4d_constructor(method, hippo, complex, discretisation):
     assert model.B_bar.shape == (5, 10)
 
 
-@pytest.mark.parametrize("hippo", [True, False])
-@pytest.mark.parametrize("complex", [True, False])
+@pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad", "real", "complex"])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4d_recurrent_forward(hippo, complex, discretisation):
+def test_s4d_recurrent_forward(init_method, discretisation):
     model = S4DBlock(
         method="recurrent",
         hidden_dim=10,
-        hippo=hippo,
         input_dim=5,
-        complex=complex,
+        initialization=init_method,
         discretization=discretisation,
     )
     y = model.forward(x)
     assert y.shape == (1000, 25, 5)
 
 
-@pytest.mark.parametrize("hippo", [True, False])
-@pytest.mark.parametrize("complex", [True, False])
+@pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad", "real", "complex"])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4d_convolutional_backward(hippo, complex, discretisation):
+def test_s4d_convolutional_backward(init_method, discretisation):
     model = S4DBlock(
         method="recurrent",
         hidden_dim=10,
-        hippo=hippo,
         input_dim=5,
-        complex=complex,
+        initialization=init_method,
         discretization=discretisation,
     )
     x.requires_grad = True
@@ -61,32 +55,27 @@ def test_s4d_convolutional_backward(hippo, complex, discretisation):
     assert x._grad.shape == x.shape
 
 
-@pytest.mark.parametrize("hippo", [True, False])
-@pytest.mark.parametrize("complex", [True, False])
+@pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad", "real", "complex"])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4d_convolutional_forward(hippo, complex, discretisation):
+def test_s4d_convolutional_forward(init_method, discretisation):
     model = S4DBlock(
         method="convolutional",
         hidden_dim=10,
-        hippo=hippo,
         input_dim=5,
-        complex=complex,
+        initialization=init_method,
         discretization=discretisation,
     )
     y = model.forward(x)
     assert y.shape == (1000, 25, 5)
 
-
-@pytest.mark.parametrize("hippo", [True, False])
-@pytest.mark.parametrize("complex", [True, False])
+@pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad", "real", "complex"])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4_convolutional_backward(hippo, complex, discretisation):
+def test_s4_convolutional_backward(init_method, discretisation):
     model = S4DBlock(
         method="convolutional",
         hidden_dim=10,
-        hippo=hippo,
         input_dim=5,
-        complex=complex,
+        initialization=init_method,
         discretization=discretisation,
     )
     x.requires_grad = True

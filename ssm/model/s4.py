@@ -28,7 +28,6 @@ class S4(torch.nn.Module):
 
     def __init__(
         self,
-        method,
         input_dim,
         model_dim,
         hidden_dim,
@@ -36,20 +35,20 @@ class S4(torch.nn.Module):
         block_type="S4",
         n_layers=2,
         func=torch.nn.ReLU,
-        hippo=True,
+        **kwargs
     ):
         """
         Initialization of the S4 model.
 
-        :param str method: The forward computation method.
-            Available options are: `"continuous"`, `"recurrent"`, `"fourier"`.
         :param int input_dim: The input dimension.
         :param int model_dim: The dimension of data passed S4 blocks
         :param int hidden_dim: The hidden dimension.
         :param int output_dim: The output dimension.
         :param int n_layers: Number of S4 layers.
-
-        :param bool hippo: Whether to use the Hippocampus mechanism.
+        :param str block_type: The type of S4 block to use.
+            Available options are: `"S4"`, `"S4D"`, `"S4LowRank"`.
+        :param torch.nn.Module func: The activation function.
+        :param dict kwargs: Additional keyword arguments used in the block.
         """
         super().__init__()
         if block_type == "S4":
@@ -58,9 +57,6 @@ class S4(torch.nn.Module):
             block_class = S4DBlock
         elif block_type == "S4LowRank":
             block_class = S4LowRankBlock
-            if method != "convolutional":
-                raise RuntimeError("S4LowRankBlock does not support method "
-                "{method}")
         else:
             raise RuntimeError("Unrecognized method {method}")
 
@@ -69,10 +65,9 @@ class S4(torch.nn.Module):
         for _ in range(n_layers):
             layers.append(
                 block_class(
-                    method=method,
                     hidden_dim=hidden_dim,
-                    hippo=hippo,
                     input_dim=model_dim,
+                    **kwargs
                 )
             )
             layers.append(func())

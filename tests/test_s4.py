@@ -7,10 +7,9 @@ x = torch.rand(1000, 25, 1)
 
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 @pytest.mark.parametrize("block_type", ["S4", "S4LowRank", "S4D"])
-@pytest.mark.parametrize("hippo", [True, False])
-def test_s4_constructor(method, block_type, hippo):
+def test_s4_constructor(method, block_type):
     if block_type == "S4LowRank" and method == "recurrent":
-        with pytest.raises(RuntimeError):
+        with pytest.raises(NotImplementedError):
             S4(
                 method=method,
                 block_type=block_type,
@@ -18,7 +17,6 @@ def test_s4_constructor(method, block_type, hippo):
                 model_dim=5,
                 output_dim=2,
                 hidden_dim=10,
-                hippo=hippo,
                 n_layers=3,
             )
     else:
@@ -29,15 +27,13 @@ def test_s4_constructor(method, block_type, hippo):
             model_dim=5,
             output_dim=2,
             hidden_dim=10,
-            hippo=hippo,
             n_layers=3,
         )
 
 
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 @pytest.mark.parametrize("block_type", ["S4", "S4LowRank", "S4D"])
-@pytest.mark.parametrize("hippo", [True, False])
-def test_s4_forward(method, hippo, block_type):
+def test_s4_forward(method, block_type):
     if block_type == 'S4LowRank' and method == 'recurrent':
         return
     model = S4(
@@ -47,7 +43,6 @@ def test_s4_forward(method, hippo, block_type):
         model_dim=5,
         output_dim=2,
         hidden_dim=10,
-        hippo=hippo,
         n_layers=3,
     )
     y = model.forward(x)
@@ -56,8 +51,7 @@ def test_s4_forward(method, hippo, block_type):
 
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 @pytest.mark.parametrize("block_type", ["S4", "S4LowRank", "S4D"])
-@pytest.mark.parametrize("hippo", [True, False])
-def test_s4_backrward(method, hippo, block_type):
+def test_s4_backrward(method, block_type):
     if block_type == 'S4LowRank' and method == 'recurrent':
         return
     model = S4(
@@ -67,7 +61,6 @@ def test_s4_backrward(method, hippo, block_type):
         model_dim=5,
         output_dim=2,
         hidden_dim=10,
-        hippo=hippo,
         n_layers=3,
     )
     y = model.forward(x)

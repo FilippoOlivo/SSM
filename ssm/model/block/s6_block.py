@@ -1,6 +1,6 @@
 import torch
 from torch.nn import Softplus
-from ...utils import compute_hippo_diagonal
+from ...utils import compute_S4DReal
 
 
 class DeltaNetowork(torch.nn.Module):
@@ -22,27 +22,27 @@ class S6Block(torch.nn.Module):
         self,
         input_dim: int,
         hidden_dim: int,
-        hippo: bool = False,
         dt: float = 0.1,
+        random_init: bool = False,
     ):
         super().__init__()
 
         # Dimensions
         self.input_dim = input_dim  # Input dimension
         self.hidden_dim = hidden_dim  # Hidden dimension
-
-        # Initialize A for all channels
-        if hippo:
-            # For HIPPO, all channels share the same A matrix patterns
+        
+        if random_init:
+            A = torch.rand(input_dim, hidden_dim)
+        else:
             A = (
-                compute_hippo_diagonal(hidden_dim, complex=False)
+                compute_S4DReal(hidden_dim)
                 .unsqueeze(0)
                 .repeat(input_dim, 1)
+                .clone()
             )
-        else:
-            # Otherwise, independent random initialization for each channel
-            A = torch.rand(input_dim, hidden_dim)
-        self.A = torch.nn.Parameter(A)  # Make A a learnable parameter
+
+        # Set the A matrix and trainable parameter/Modules
+        self.A = torch.nn.Parameter(A)
         self.dt = dt
         self.sb = torch.nn.Linear(input_dim, hidden_dim)
         self.sc = torch.nn.Linear(input_dim, hidden_dim)
