@@ -12,7 +12,7 @@ class S4DBlock(torch.nn.Module):
         instance = super().__new__(cls)
         if method == "recurrent":
             instance.forward = instance.forward_recurrent
-        elif method == "fourier":
+        elif method == "convolutional":
             instance.forward = instance.forward_convolutional
         else:
             raise ValueError(f"Unknown method: {method}")

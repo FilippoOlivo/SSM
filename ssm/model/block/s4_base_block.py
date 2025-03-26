@@ -49,8 +49,8 @@ class S4BaseBlock(torch.nn.Module):
             instance.forward = instance.forward_continuous
         elif method == "recurrent":
             instance.forward = instance.forward_recurrent
-        elif method == "fourier":
-            instance.forward = instance.forward_fourier
+        elif method == "convolutional":
+            instance.forward = instance.forward_convolutional
         else:
             raise ValueError(f"Unknown method: {method}")
         return instance
@@ -181,7 +181,7 @@ class S4BaseBlock(torch.nn.Module):
 
         return K
 
-    def forward_fourier(self, x):
+    def forward_convolutional(self, x):
         """
         Forward pass using the Fourier method.
 
@@ -223,7 +223,7 @@ class S4BaseBlock(torch.nn.Module):
             self.forward = self.forward_continuous
         elif method == "recurrent":
             self.forward = self.forward_recurrent
-        elif method == "fourier":
-            self.forward = self.forward_fourier
+        elif method == "convolutional":
+            self.forward = self.forward_convolutional
         else:
             raise ValueError(f"Unknown method: {method}")

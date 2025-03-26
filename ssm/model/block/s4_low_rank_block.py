@@ -14,11 +14,14 @@ class S4LowRankBlock(nn.Module):
         self,
         input_dim: int,
         hidden_dim: int,
-        L: int,  # Sequence length
+        method: str = 'convolutional',
         dt: float = 0.1,
         hippo: bool = True,
     ):
         super().__init__()
+        if method != 'convolutional':
+            raise NotImplemented("S4LowRankBlock supports only 'convolutional"
+            " method")
         A = compute_hippo(hidden_dim)
         # Define parameters
         self.B = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))
@@ -34,7 +37,7 @@ class S4LowRankBlock(nn.Module):
             )
             self.P = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))
             self.Q = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))
-        self.register_buffer("omega", self._init_omega(L))
+        self.register_buffer("omega", None)
         self.dt = torch.tensor([dt])
         self.hidden_dim = hidden_dim
         self.input_dim = input_dim
@@ -80,16 +83,18 @@ class S4LowRankBlock(nn.Module):
 
     def forward(self, x):
         # x: [B, L, input_dim]
-        _, seq_len, _ = x.shape
+        _, L, _ = x.shape
+        if self.omega is None:
+            self.omega = self._init_omega(L)
         x_reshaped = x.transpose(1, 2)  # [B, input_dim, L]
 
         # Compute kernel via Cauchy product
-        K = self.compute_K(seq_len)  # [input_dim, L]
+        K = self.compute_K(L)  # [input_dim, L]
 
         # Pad input and kernel to avoid circular convolution effects
-        total_length = 2 * seq_len  # Total length of the padded sequence
-        x_padded = pad(x_reshaped, (0, seq_len))  # [B, input_dim, total_length]
-        K_padded = pad(K, (0, seq_len))  # [input_dim, total_length]
+        total_length = 2 * L  # Total length of the padded sequence
+        x_padded = pad(x_reshaped, (0, L))  # [B, input_dim, total_length]
+        K_padded = pad(K, (0, L))  # [input_dim, total_length]
 
         # Compute FFT of input and kernel
         x_fft = torch.fft.rfft(
@@ -105,5 +110,5 @@ class S4LowRankBlock(nn.Module):
 
         # IFFT back to time domain: [B, input_dim, total_length]
         y = torch.fft.irfft(y_fft, n=total_length, dim=2)
-        y = y[:, :, :seq_len]  # [B, input_dim, L]
+        y = y[:, :, :L]  # [B, input_dim, L]
         return y.transpose(1, 2)  # [B, L, input_dim]

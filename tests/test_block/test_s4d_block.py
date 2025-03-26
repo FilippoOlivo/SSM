@@ -5,7 +5,7 @@ from ssm.model.block import S4DBlock
 x = torch.rand(1000, 25, 5)
 
 
-@pytest.mark.parametrize("method", ["recurrent", "fourier"])
+@pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 @pytest.mark.parametrize("hippo", [True, False])
 @pytest.mark.parametrize("complex", [True, False])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
@@ -45,7 +45,7 @@ def test_s4d_recurrent_forward(hippo, complex, discretisation):
 @pytest.mark.parametrize("hippo", [True, False])
 @pytest.mark.parametrize("complex", [True, False])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4d_fourier_backward(hippo, complex, discretisation):
+def test_s4d_convolutional_backward(hippo, complex, discretisation):
     model = S4DBlock(
         method="recurrent",
         hidden_dim=10,
@@ -64,9 +64,9 @@ def test_s4d_fourier_backward(hippo, complex, discretisation):
 @pytest.mark.parametrize("hippo", [True, False])
 @pytest.mark.parametrize("complex", [True, False])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4d_fourier_forward(hippo, complex, discretisation):
+def test_s4d_convolutional_forward(hippo, complex, discretisation):
     model = S4DBlock(
-        method="fourier",
+        method="convolutional",
         hidden_dim=10,
         hippo=hippo,
         input_dim=5,
@@ -80,9 +80,9 @@ def test_s4d_fourier_forward(hippo, complex, discretisation):
 @pytest.mark.parametrize("hippo", [True, False])
 @pytest.mark.parametrize("complex", [True, False])
 @pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
-def test_s4_fourier_backward(hippo, complex, discretisation):
+def test_s4_convolutional_backward(hippo, complex, discretisation):
     model = S4DBlock(
-        method="fourier",
+        method="convolutional",
         hidden_dim=10,
         hippo=hippo,
         input_dim=5,

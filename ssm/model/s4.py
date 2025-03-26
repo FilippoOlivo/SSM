@@ -1,6 +1,7 @@
 import torch
-from torch.func import vmap
 from .block.s4_base_block import S4BaseBlock
+from .block.s4_low_rank_block import S4LowRankBlock
+from .block.s4d_block import S4DBlock
 
 
 class S4(torch.nn.Module):
@@ -25,26 +26,59 @@ class S4(torch.nn.Module):
         DOI: `<https://doi.org/10.48550/arXiv.2111.00396>_`.
     """
 
-    def __init__(self, method, input_dim, output_dim, hidden_dim, hippo=True):
+    def __init__(
+        self,
+        method,
+        input_dim,
+        model_dim,
+        hidden_dim,
+        output_dim,
+        block_type="S4",
+        n_layers=2,
+        func=torch.nn.ReLU,
+        hippo=True,
+    ):
         """
         Initialization of the S4 model.
 
         :param str method: The forward computation method.
             Available options are: `"continuous"`, `"recurrent"`, `"fourier"`.
         :param int input_dim: The input dimension.
-        :param int output_dim: The output dimension.
+        :param int model_dim: The dimension of data passed S4 blocks
         :param int hidden_dim: The hidden dimension.
+        :param int output_dim: The output dimension.
+        :param int n_layers: Number of S4 layers.
+
         :param bool hippo: Whether to use the Hippocampus mechanism.
         """
         super().__init__()
+        if block_type == "S4":
+            block_class = S4BaseBlock
+        elif block_type == "S4D":
+            block_class = S4DBlock
+        elif block_type == "S4LowRank":
+            block_class = S4LowRankBlock
+            if method != "convolutional":
+                raise RuntimeError("S4LowRankBlock does not support method "
+                "{method}")
+        else:
+            raise RuntimeError("Unrecognized method {method}")
 
-        self.block = S4BaseBlock(
-            method=method,
-            hidden_dim=hidden_dim,
-            hippo=hippo,
-            input_dim=input_dim,
-        )
-        self.mixing_fc = torch.nn.Linear(input_dim, output_dim)
+        self.encoder = torch.nn.Linear(input_dim, model_dim)
+        layers = []
+        for _ in range(n_layers):
+            layers.append(
+                block_class(
+                    method=method,
+                    hidden_dim=hidden_dim,
+                    hippo=hippo,
+                    input_dim=model_dim,
+                )
+            )
+            layers.append(func())
+            layers.append(torch.nn.Linear(model_dim, model_dim))
+        self.layers = torch.nn.Sequential(*layers)
+        self.decode = torch.nn.Linear(model_dim, output_dim)
 
     def forward(self, x):
         """
@@ -54,8 +88,9 @@ class S4(torch.nn.Module):
         :return: The output tensor.
         :rtype: torch.Tensor
         """
-        y = self.block(x)
-        y = self.mixing_fc(y)
+        y = self.encoder(x)
+        y = self.layers(y)
+        y = self.decode(y)
         return y
 
     def change_forward(self, method):
