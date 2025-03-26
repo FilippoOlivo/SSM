@@ -1,7 +1,7 @@
 import pytest
 import torch
 from ssm.model.block import S4BaseBlock
-from ssm.model.block import S4AdvandedBlock
+from ssm.model.block import S4LowRankBlock
 
 x = torch.rand(1000, 25, 5)
 
@@ -62,7 +62,7 @@ def test_s4_fourier_backward(hippo):
 
 @pytest.mark.parametrize("hippo", [True, False])
 def test_s4_adv_constructor(hippo):
-    model = S4AdvandedBlock(hidden_dim=10, input_dim=5, hippo=hippo, L=25)
+    model = S4LowRankBlock(hidden_dim=10, input_dim=5, hippo=hippo, L=25)
     assert model.P.shape == (5, 10)
     assert model.Q.shape == (5, 10)
     assert model.Lambda.shape == (5, 1, 10)
@@ -70,14 +70,14 @@ def test_s4_adv_constructor(hippo):
 
 @pytest.mark.parametrize("hippo", [True, False])
 def test_s4_adv_forward(hippo):
-    model = S4AdvandedBlock(hidden_dim=10, input_dim=5, hippo=hippo, L=25)
+    model = S4LowRankBlock(hidden_dim=10, input_dim=5, hippo=hippo, L=25)
     y = model.forward(x)
     assert y.shape == (1000, 25, 5)
 
 
 @pytest.mark.parametrize("hippo", [True, False])
 def test_s4_adv_backward(hippo):
-    model = S4AdvandedBlock(hidden_dim=10, input_dim=5, hippo=hippo, L=25)
+    model = S4LowRankBlock(hidden_dim=10, input_dim=5, hippo=hippo, L=25)
     y = model.forward(x)
     x.requires_grad = True
     y = model.forward(x)

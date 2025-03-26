@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from ...utils import compute_hippo, compute_dplr
 
 
-class S4AdvandedBlock(nn.Module):
+class S4LowRankBlock(nn.Module):
     """
     TODO
     """
