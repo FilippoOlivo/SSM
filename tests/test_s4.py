@@ -34,7 +34,7 @@ def test_s4_constructor(method, block_type):
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 @pytest.mark.parametrize("block_type", ["S4", "S4LowRank", "S4D"])
 def test_s4_forward(method, block_type):
-    if block_type == 'S4LowRank' and method == 'recurrent':
+    if block_type == "S4LowRank" and method == "recurrent":
         return
     model = S4(
         method=method,
@@ -51,8 +51,8 @@ def test_s4_forward(method, block_type):
 
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 @pytest.mark.parametrize("block_type", ["S4", "S4LowRank", "S4D"])
-def test_s4_backrward(method, block_type):
-    if block_type == 'S4LowRank' and method == 'recurrent':
+def test_s4_backward(method, block_type):
+    if block_type == "S4LowRank" and method == "recurrent":
         return
     model = S4(
         method=method,

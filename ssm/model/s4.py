@@ -35,7 +35,7 @@ class S4(torch.nn.Module):
         block_type="S4",
         n_layers=2,
         func=torch.nn.ReLU,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialization of the S4 model.
@@ -65,9 +65,7 @@ class S4(torch.nn.Module):
         for _ in range(n_layers):
             layers.append(
                 block_class(
-                    hidden_dim=hidden_dim,
-                    input_dim=model_dim,
-                    **kwargs
+                    hidden_dim=hidden_dim, input_dim=model_dim, **kwargs
                 )
             )
             layers.append(func())

@@ -3,7 +3,7 @@ from torch.nn import Softplus
 from ...utils import compute_S4DReal
 
 
-class DeltaNetowork(torch.nn.Module):
+class DeltaNetwork(torch.nn.Module):
     def __init__(self, dt, input_dim, hidden_dim):
         super().__init__()
         self.dt = dt
@@ -30,7 +30,7 @@ class S6Block(torch.nn.Module):
         # Dimensions
         self.input_dim = input_dim  # Input dimension
         self.hidden_dim = hidden_dim  # Hidden dimension
-        
+
         if random_init:
             A = torch.rand(input_dim, hidden_dim)
         else:
@@ -46,7 +46,7 @@ class S6Block(torch.nn.Module):
         self.dt = dt
         self.sb = torch.nn.Linear(input_dim, hidden_dim)
         self.sc = torch.nn.Linear(input_dim, hidden_dim)
-        self.tau_delta = DeltaNetowork(
+        self.tau_delta = DeltaNetwork(
             dt=dt, input_dim=input_dim, hidden_dim=hidden_dim
         )
 
