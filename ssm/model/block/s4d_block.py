@@ -105,13 +105,14 @@ class S4DBlock(torch.nn.Module):
         # Discretize dynamics for all channels at once
         self.discretize()
 
-        h = torch.zeros(
-            batch_size, self.input_dim, self.hidden_dim
-        ).to(x.device)  # [B, input_dim, hidden_dim]
+        h = torch.zeros(batch_size, self.input_dim, self.hidden_dim).to(
+            x.device
+        )  # [B, input_dim, hidden_dim]
 
         # [B, L, input_dim]
         y = torch.zeros((*x.shape[:-1], self.input_dim), dtype=x.dtype).to(
-            x.device)
+            x.device
+        )
 
         # Iterate over time steps
         for t in range(seq_len):
@@ -155,7 +156,6 @@ class S4DBlock(torch.nn.Module):
         y = y[:, :, :L]
         # Transpose the output to the original shape -> [B, L, input_dim]
         return y.transpose(1, 2)
-
 
     def change_forward(self, method):
         """Change the forward method."""

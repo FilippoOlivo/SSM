@@ -36,7 +36,7 @@ class S4LowRankBlock(nn.Module):
             self.Lambda = torch.rand(input_dim, 1, hidden_dim)
             self.P = torch.rand(input_dim, hidden_dim)
             self.Q = torch.rand(input_dim, hidden_dim)
-        
+
         self.Lambda = torch.nn.Parameter(self.Lambda)
         self.P = torch.nn.Parameter(self.P)
         self.Q = torch.nn.Parameter(self.Q)

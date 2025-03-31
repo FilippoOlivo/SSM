@@ -77,9 +77,7 @@ class S4(torch.nn.Module):
         self.layers = torch.nn.Sequential(*layers)
         self.decode = torch.nn.Linear(model_dim, output_dim)
         self.soft_max = torch.nn.Softmax(dim=-1)
-        self.embedding = Embedding(input_dim, model_dim)
 
-    
     def forward(self, x):
         """
         Forward pass of the S4 model.
@@ -88,10 +86,8 @@ class S4(torch.nn.Module):
         :return: The output tensor.
         :rtype: torch.Tensor
         """
-        y = self.embedding(x)
-        y = self.layers(y)
+        y = self.layers(x)
         y = self.decode(y)
-        y = self.soft_max(y)
         return y
 
     def change_forward(self, method):
