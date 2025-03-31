@@ -219,9 +219,7 @@ class S4BaseBlock(torch.nn.Module):
 
     def change_forward(self, method):
         """Change the forward method."""
-        if method == "continuous":
-            self.forward = self.forward_continuous
-        elif method == "recurrent":
+        if method == "recurrent":
             self.forward = self.forward_recurrent
         elif method == "convolutional":
             self.forward = self.forward_convolutional

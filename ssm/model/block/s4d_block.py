@@ -89,7 +89,7 @@ class S4DBlock(torch.nn.Module):
         self.B_bar = 1 / self.A_bar * (self.A_bar - 1) * self.B * self.dt
 
     def vandermonde_matrix(self, L):
-        exponents = torch.arange(L)
+        exponents = torch.arange(L, device=self.A_bar.device)
         V = self.A_bar.unsqueeze(-1) ** exponents
         return V
 
@@ -107,10 +107,11 @@ class S4DBlock(torch.nn.Module):
 
         h = torch.zeros(
             batch_size, self.input_dim, self.hidden_dim
-        )  # [B, input_dim, hidden_dim]
+        ).to(x.device)  # [B, input_dim, hidden_dim]
 
         # [B, L, input_dim]
-        y = torch.zeros((*x.shape[:-1], self.input_dim), dtype=x.dtype)
+        y = torch.zeros((*x.shape[:-1], self.input_dim), dtype=x.dtype).to(
+            x.device)
 
         # Iterate over time steps
         for t in range(seq_len):
@@ -154,3 +155,13 @@ class S4DBlock(torch.nn.Module):
         y = y[:, :, :L]
         # Transpose the output to the original shape -> [B, L, input_dim]
         return y.transpose(1, 2)
+
+
+    def change_forward(self, method):
+        """Change the forward method."""
+        if method == "recurrent":
+            self.forward = self.forward_recurrent
+        elif method == "convolutional":
+            self.forward = self.forward_convolutional
+        else:
+            raise ValueError(f"Unknown method: {method}")

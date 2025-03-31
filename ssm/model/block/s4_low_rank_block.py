@@ -33,13 +33,16 @@ class S4LowRankBlock(nn.Module):
             self.P = self.P.repeat(input_dim, 1)
             self.Q = self.Q.repeat(input_dim, 1)
         else:
-            self.Lambda = torch.nn.Parameter(
-                torch.rand(input_dim, 1, hidden_dim)
-            )
-            self.P = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))
-            self.Q = torch.nn.Parameter(torch.rand(input_dim, hidden_dim))
+            self.Lambda = torch.rand(input_dim, 1, hidden_dim)
+            self.P = torch.rand(input_dim, hidden_dim)
+            self.Q = torch.rand(input_dim, hidden_dim)
+        
+        self.Lambda = torch.nn.Parameter(self.Lambda)
+        self.P = torch.nn.Parameter(self.P)
+        self.Q = torch.nn.Parameter(self.Q)
+
         self.register_buffer("omega", None)
-        self.dt = torch.tensor([dt])
+        self.register_buffer("dt", torch.tensor([dt]))
         self.hidden_dim = hidden_dim
         self.input_dim = input_dim
 
@@ -60,7 +63,7 @@ class S4LowRankBlock(nn.Module):
 
     def compute_K(self, L):
         # Store the complex conjugates and other parameters
-        a0, a1 = self.C_tilde.conj(), self.Q.conj()
+        a0, a1 = self.C_tilde.conj(), self.Q
         b0, b1 = self.B, self.P
 
         # Compute the denominator
@@ -86,7 +89,7 @@ class S4LowRankBlock(nn.Module):
         # x: [B, L, input_dim]
         _, L, _ = x.shape
         if self.omega is None:
-            self.omega = self._init_omega(L)
+            self.omega = self._init_omega(L).to(x.device)
         x_reshaped = x.transpose(1, 2)  # [B, input_dim, L]
 
         # Compute kernel via Cauchy product

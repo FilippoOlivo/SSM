@@ -70,9 +70,9 @@ class S6Block(torch.nn.Module):
         A_bar, B_bar = self.discretize(self.A, B, dt)  # Discretize A and B
 
         # Initialize the initial hidden state of size [B, input_dim, hidden_dim]
-        h = torch.zeros(x.shape[0], self.input_dim, self.hidden_dim)
+        h = torch.zeros(x.shape[0], self.input_dim, self.hidden_dim, device=x.device)
         # Initialize the output tensor of size [B, L, input_dim]
-        y = torch.zeros((*x.shape[:-1], self.input_dim))
+        y = torch.zeros((*x.shape[:-1], self.input_dim), device=x.device)
 
         # Loop over the sequence length
         for t in range(x.shape[1]):

@@ -2,6 +2,8 @@ import torch
 from .block.s4_base_block import S4BaseBlock
 from .block.s4_low_rank_block import S4LowRankBlock
 from .block.s4d_block import S4DBlock
+from .block.s6_block import S6Block
+from torch.nn import Embedding
 
 
 class S4(torch.nn.Module):
@@ -57,6 +59,8 @@ class S4(torch.nn.Module):
             block_class = S4DBlock
         elif block_type == "S4LowRank":
             block_class = S4LowRankBlock
+        elif block_type == "S6":
+            block_class = S6Block
         else:
             raise RuntimeError("Unrecognized method {method}")
 
@@ -72,7 +76,10 @@ class S4(torch.nn.Module):
             layers.append(torch.nn.Linear(model_dim, model_dim))
         self.layers = torch.nn.Sequential(*layers)
         self.decode = torch.nn.Linear(model_dim, output_dim)
+        self.soft_max = torch.nn.Softmax(dim=-1)
+        self.embedding = Embedding(input_dim, model_dim)
 
+    
     def forward(self, x):
         """
         Forward pass of the S4 model.
@@ -81,9 +88,10 @@ class S4(torch.nn.Module):
         :return: The output tensor.
         :rtype: torch.Tensor
         """
-        y = self.encoder(x)
+        y = self.embedding(x)
         y = self.layers(y)
         y = self.decode(y)
+        y = self.soft_max(y)
         return y
 
     def change_forward(self, method):
@@ -94,4 +102,6 @@ class S4(torch.nn.Module):
             Available options are: `"continuous"`, `"recurrent"`, `"fourier"`.
         """
 
-        self.block.change_forward(method)
+        for layer in self.layers:
+            if isinstance(layer, (S4BaseBlock, S4DBlock)):
+                layer.change_forward(method)
