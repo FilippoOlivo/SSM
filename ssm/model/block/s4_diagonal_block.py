@@ -94,8 +94,9 @@ class S4DBlock(S4BlockInterface):
         Discretization of the continuous-time dynamics to obtain the matrices
         :math:`A_{bar}` and :math:`B_{bar}`.
         """
-        self.A_bar = torch.exp(self.A * self.dt)
-        self.B_bar = 1 / self.A_bar * (self.A_bar - 1) * self.B * self.dt
+        tmp = self.A * self.dt
+        self.A_bar = torch.exp(tmp)
+        self.B_bar = (self.A_bar - 1) * self.B * self.dt / tmp
 
     def vandermonde_matrix(self, L):
         """
