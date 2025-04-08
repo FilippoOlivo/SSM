@@ -43,10 +43,10 @@ def compute_hippo(N):
 
 def compute_S4DInv(N):
     """
-    Constructs the S4D-Inv matrix A, represented as a 1-D torch.Tensor.
+    Construct the S4D-Inv matrix A.
 
-    :param int hidden_dim: The size of the matrix.
-    :return: A matrix initialized using the S4D-Inv method.
+    :param int N: The size of the matrix.
+    :return: The computed matrix A.
     :rtype: torch.Tensor
     """
     n = torch.arange(N, dtype=torch.float32)
@@ -55,9 +55,10 @@ def compute_S4DInv(N):
 
 def compute_S4DLin(N):
     """
-    Constructs the S4D-Lin hidden-to-hidden matrix A.
+    Construct the S4D-Lin matrix A.
+
     :param int N: The size of the matrix.
-    :return: A matrix initialized using the S4D-Inv method.
+    :return: The computed matrix A.
     :rtype: torch.Tensor
     """
     n = torch.arange(N, dtype=torch.float32)
@@ -66,9 +67,10 @@ def compute_S4DLin(N):
 
 def compute_S4DQuad(N):
     """
-    Constructs the S4D-Quad hidden-to-hidden matrix A.
+    Construct the S4D-Quad matrix A.
+
     :param int N: The size of the matrix.
-    :return: A matrix initialized using the S4D-Inv method.
+    :return: The computed matrix A.
     :rtype: torch.Tensor
     """
     n = torch.arange(N, dtype=torch.float32)
@@ -77,9 +79,10 @@ def compute_S4DQuad(N):
 
 def compute_S4DReal(N):
     """
-    Constructs the S4D-Real hidden-to-hidden matrix A.
+    Construct the S4D-Real matrix A.
+
     :param int N: The size of the matrix.
-    :return: A matrix initialized using the S4D-Inv method.
+    :return: The computed matrix A.
     :rtype: torch.Tensor
     """
     return -(torch.rand(N) + 1)
@@ -87,18 +90,25 @@ def compute_S4DReal(N):
 
 def compute_dplr(A):
     """
-    TODO
+    Construct the diagonal plus low-rank (DPLR) form of matrix A. The matrix A
+    is decomposed into a diagonal matrix Lambda and in a low-rank matrix given
+    by the outer product of two vectors p and q.
+
+    :param torch.Tensor A: The input matrix.
+    :return: The diagonal plus low-rank form of A.
+    :rtype: tuple
     """
-    # Compute p and q in a vectorized manner
-    N = A.shape[0]
-    indices = torch.arange(1, N + 1, dtype=torch.float32)
-    p = 0.5 * torch.sqrt(2 * indices + 1.0)
+    # Initialize p and q
+    idx = torch.arange(1, A.shape[0] + 1, dtype=torch.float32)
+    p = 0.5 * torch.sqrt(2 * idx + 1.0)
     q = 2 * p
-    # Construct S efficiently
+
+    # Construct a matrix S
     S = A + p[:, None] * q[None, :]
+
+    # Compute Lambda, p, q
     Lambda, V = torch.linalg.eig(S)
     Vc = V.conj().T
-    p, q = p.to(Vc.dtype), q.to(Vc.dtype)
-    p = Vc @ p
-    q = Vc @ q
+    p = Vc @ p.to(Vc.dtype)
+    q = Vc @ q.to(Vc.dtype)
     return Lambda, p, q
