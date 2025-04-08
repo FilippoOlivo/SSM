@@ -31,12 +31,14 @@ class S4LowRankBlock(S4BlockInterface):
 
         :param int input_dim: The input dimension.
         :param int hid_dim: The hidden state dimension.
-        :param float dt: The time step for discretization.
+        :param float dt: The time step for discretization. Default is `0.1`.
         :param bool hippo: Whether to use the HIPPO matrix for initialization.
+            Default is `True`.
+        :param dict kwargs: Additional arguments for the class constructor.
         """
-
+        # Initialize matrices B and C
         B = torch.nn.Parameter(torch.rand(input_dim, hid_dim))
-        C_tilde = torch.nn.Parameter(torch.rand(input_dim, hid_dim))
+        C = torch.nn.Parameter(torch.rand(input_dim, hid_dim))
 
         super().__init__(
             input_dim=input_dim,
@@ -44,15 +46,28 @@ class S4LowRankBlock(S4BlockInterface):
             dt=dt,
             A=torch.empty((1)),
             B=B,
-            C=C_tilde,
+            C=C,
+            method="convolutional",
         )
 
+        # Check on method
+        if self.method != "convolutional":
+            raise ValueError(
+                "S4LowRankBlock only supports convolutional method,"
+                f" got {self.method}"
+            )
+
+        # Delete dt for GPU memory management
+        del self.dt
+
+        # Initialize low-rank decomposition matrices
         if hippo:
             A = compute_hippo(hid_dim)
             self.Lambda, self.P, self.Q = compute_dplr(A)
             self.Lambda = self.Lambda.unsqueeze(0).repeat(input_dim, 1, 1)
             self.P = self.P.repeat(input_dim, 1)
             self.Q = self.Q.repeat(input_dim, 1)
+
         else:
             self.Lambda = torch.rand(input_dim, 1, hid_dim)
             self.P = torch.rand(input_dim, hid_dim)
@@ -62,9 +77,8 @@ class S4LowRankBlock(S4BlockInterface):
         self.P = torch.nn.Parameter(self.P)
         self.Q = torch.nn.Parameter(self.Q)
 
+        # Initialize parameters
         self.register_buffer("omega", None)
-        del self.dt  # Remove existing dt variable (must be a torch.Tensor and
-        # must be moved into GPU memory)
         self.register_buffer("dt", torch.tensor([dt]))
 
     def forward_convolutional(self, x):
@@ -155,6 +169,7 @@ class S4LowRankBlock(S4BlockInterface):
         k01 = (v01 / denominator).sum(-1)
         k10 = (v10 / denominator).sum(-1)
         k11 = (v11 / denominator).sum(-1)
+
         return k00, k01, k10, k11
 
     @staticmethod
@@ -167,9 +182,3 @@ class S4LowRankBlock(S4BlockInterface):
         :rtype: torch.Tensor
         """
         return torch.exp(2j * torch.pi * torch.arange(L) / L)
-
-    def _discretize(self):
-        pass
-
-    def forward_recurrent(self, x):
-        raise NotImplementedError

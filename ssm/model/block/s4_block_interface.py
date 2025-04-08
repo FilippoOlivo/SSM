@@ -37,6 +37,7 @@ class S4BlockInterface(torch.nn.Module, ABC):
 
         :param str method: The forward computation method. Available options
             are: recurrent, convolutional.
+        :param dict kwargs: Additional arguments for the class constructor.
         :raises ValueError: If an invalid `method` is provided.
         :return: A new instance of the class with the selected forward method.
         :rtype: S4BlockInterface
@@ -50,24 +51,34 @@ class S4BlockInterface(torch.nn.Module, ABC):
             raise ValueError(f"Unknown method: {method}")
         return instance
 
-    def __init__(self, input_dim: int, hid_dim: int, dt: float, A, B, C):
+    def __init__(self, input_dim, hid_dim, dt, A, B, C, method):
         """
         Initialization of the S4 block interface.
 
         :param int input_dim: The input dimension.
         :param int hid_dim: The hidden state dimension.
         :param float dt: The time step for discretization.
+        :param torch.Tensor A: The hidden-to-hidden matrix.
+        :param torch.Tensor B: The input-to-hidden matrix.
+        :param torch.Tensor C: The hidden-to-output matrix.
+        :param str method: The forward computation method. Available options
+            are: recurrent, convolutional.
+        :raises ValueError: If an invalid `method` is provided.
         """
         super().__init__()
 
-        # Dimensions
+        # Initialize parameters
         self.input_dim = input_dim
         self.hid_dim = hid_dim
         self.dt = dt
+        if method not in ["recurrent", "convolutional"]:
+            raise ValueError(f"Unknown method: {method}")
+        self.method = method
 
         # Initialize the identity matrix
         self.I = torch.eye(hid_dim).unsqueeze(0).expand(input_dim, -1, -1)
 
+        # Initialize matrices A, B, and C
         self.A, self.B, self.C = (
             torch.nn.Parameter(A),
             torch.nn.Parameter(B),
@@ -105,7 +116,7 @@ class S4BlockInterface(torch.nn.Module, ABC):
         # Initialize the output tensor
         y = torch.empty(B, L, self.input_dim, device=x.device)
 
-        # Initialise initial hidden state
+        # Initialize initial hidden state
         h = torch.zeros(B, self.input_dim, self.hid_dim, device=x.device)
 
         A_bar, B_bar, C = self._preprocess()
@@ -171,8 +182,17 @@ class S4BlockInterface(torch.nn.Module, ABC):
     def _compute_K(self, L):
         """
         Computation of the kernel K used in the convolutional method.
+
+        :param int L: The length of the sequence.
+        :return: The convolution kernel :math:`K`.
+        :rtype: torch.Tensor
         """
-        pass
 
     def _preprocess(self):
+        """
+        Preprocessing of the discretized matrices A_bar and B_bar.
+
+        :return: The preprocessed matrices A_bar, B_bar, and C.
+        :rtype: tuple
+        """
         return self.A_bar, self.B_bar, self.C

@@ -32,10 +32,11 @@ class S4BaseBlock(S4BlockInterface):
 
     def __init__(
         self,
-        input_dim: int,
-        hid_dim: int,
-        dt: float = 0.1,
-        hippo: bool = False,
+        input_dim,
+        hid_dim,
+        dt=0.1,
+        method="recurrent",
+        hippo=False,
         **kwargs,
     ):
         """
@@ -43,9 +44,14 @@ class S4BaseBlock(S4BlockInterface):
 
         :param int input_dim: The input dimension.
         :param int hid_dim: The hidden state dimension.
-        :param float dt: The time step for discretization.
+        :param float dt: The time step for discretization. Default is `0.1`.
+        :param str method: The forward computation method. Available options
+            are: recurrent, convolutional. Default is `"recurrent"`.
         :param bool hippo: Whether to use the HIPPO matrix for initialization.
+            Default is `False`.
+        :param dict kwargs: Additional arguments for the class constructor.
         """
+        # Initialize matrices A, B, and C
         if hippo:
             A = compute_hippo(hid_dim).repeat(input_dim, 1, 1)
         else:
@@ -54,7 +60,13 @@ class S4BaseBlock(S4BlockInterface):
         C = torch.rand(input_dim, 1, hid_dim)
 
         super().__init__(
-            input_dim=input_dim, hid_dim=hid_dim, dt=dt, A=A, B=B, C=C
+            input_dim=input_dim,
+            hid_dim=hid_dim,
+            dt=dt,
+            A=A,
+            B=B,
+            C=C,
+            method=method,
         )
 
     def _compute_K(self, L):
@@ -85,16 +97,39 @@ class S4BaseBlock(S4BlockInterface):
         return K
 
     def _preprocess(self):
+        """
+        Preprocessing of the discretized matrices A_bar and B_bar.
+
+        :return: The preprocessed matrices A_bar, B_bar, and C.
+        :rtype: tuple
+        """
         A_bar = self.A_bar.transpose(1, 2).unsqueeze(0)
         B_bar = self.B_bar.squeeze(-1).unsqueeze(0)
         C = self.C.transpose(1, 2).unsqueeze(0)
+
         return A_bar, B_bar, C
 
     @staticmethod
     def _recurrent_step(A_bar, B_bar, C, x, y, h, t):
-        x_t = x[:, t, :]
+        """
+        Recurrent step computation.
+
+        :param torch.Tensor A_bar: The discretized hidden-to-hidden matrix.
+        :param torch.Tensor B_bar: The discretized input-to-hidden matrix.
+        :param torch.Tensor C: The hidden-to-output matrix.
+        :param torch.Tensor x: The input tensor.
+        :param torch.Tensor y: The output tensor.
+        :param torch.Tensor h: The hidden state tensor.
+        :param int t: The current time step.
+        :return: The updated hidden state.
+        :rtype: torch.Tensor
+        """
+        # Compute Ah + Bx
         Ah = torch.matmul(h.unsqueeze(-2), A_bar).squeeze(-2)
-        Bx = x_t.unsqueeze(-1) * B_bar
+        Bx = x[:, t, :].unsqueeze(-1) * B_bar
         h = Ah + Bx
+
+        # Compute output
         y[:, t, :] = torch.matmul(h.unsqueeze(-2), C).squeeze()
+
         return h

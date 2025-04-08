@@ -45,6 +45,7 @@ class S4DBlock(S4BlockInterface):
         input_dim,
         hid_dim,
         dt=0.1,
+        method="recurrent",
         initialization="S4D-Inv",
         discretization="bilinear",
         **kwargs,
@@ -54,24 +55,33 @@ class S4DBlock(S4BlockInterface):
 
         :param int input_dim: The input dimension.
         :param int hid_dim: The hidden state dimension.
-        :param float dt: The time step for discretization.
+        :param float dt: The time step for discretization. Default is `0.1`.
+        :param str method: The forward computation method. Available options
+            are: recurrent, convolutional. Default is `"recurrent"`.
         :param str initialization: The method for initializing the A matrix.
             Options are: S4D-Inv, S4D-Lin, S4D-Quad, S4D-Real, real, complex.
+            Default is `"S4D-Inv"`.
         :param str discretization: The method for discretizing the dynamics.
-            Options are: bilinear, zoh.
+            Options are: bilinear, zoh. Default is `"bilinear"`.
+        :param dict kwargs: Additional arguments for the class constructor.
         """
-
+        # Initialize matrices A, B, and C
         A = self.initialize_A(hid_dim, init_method=initialization)
         A = A.unsqueeze(0).repeat(input_dim, 1)
-        dtype = A.dtype
-
-        B = torch.rand(input_dim, hid_dim, dtype=dtype)
-        C = torch.rand(input_dim, hid_dim, dtype=dtype)
+        B = torch.rand(input_dim, hid_dim, dtype=A.dtype)
+        C = torch.rand(input_dim, hid_dim, dtype=A.dtype)
 
         super().__init__(
-            input_dim=input_dim, hid_dim=hid_dim, dt=dt, A=A, B=B, C=C
+            input_dim=input_dim,
+            hid_dim=hid_dim,
+            dt=dt,
+            A=A,
+            B=B,
+            C=C,
+            method=method,
         )
 
+        # Discretization of the dynamics
         if discretization == "bilinear":
             self._discretize = self._discretize_bilinear
         elif discretization == "zoh":
@@ -107,8 +117,7 @@ class S4DBlock(S4BlockInterface):
         :rtype: torch.Tensor
         """
         exponents = torch.arange(L, device=self.A_bar.device)
-        V = self.A_bar.unsqueeze(-1) ** exponents
-        return V
+        return self.A_bar.unsqueeze(-1) ** exponents
 
     def _compute_K(self, L):
         """
@@ -123,13 +132,30 @@ class S4DBlock(S4BlockInterface):
 
     @staticmethod
     def _recurrent_step(A_bar, B_bar, C, x, y, h, t):
-        x_t = x[:, t, :]  # Extract the input at time t
+        """
+        Recurrent step computation.
+
+        :param torch.Tensor A_bar: The discretized hidden-to-hidden matrix.
+        :param torch.Tensor B_bar: The discretized input-to-hidden matrix.
+        :param torch.Tensor C: The hidden-to-output matrix.
+        :param torch.Tensor x: The input tensor.
+        :param torch.Tensor y: The output tensor.
+        :param torch.Tensor h: The hidden state tensor.
+        :param int t: The current time step.
+        :return: The updated hidden state.
+        :rtype: torch.Tensor
+        """
+        # Compute hidden state
+        x_t = x[:, t, :]
         h = A_bar.unsqueeze(0) * h + B_bar.unsqueeze(0) * x_t.unsqueeze(2)
+
+        # Compute output
         y[:, t, :] = torch.sum(h * C.unsqueeze(0), dim=-1).real
+
         return h
 
     @staticmethod
-    def initialize_A(hid_dim, init_method="S4D-Inv"):
+    def initialize_A(hid_dim, init_method):
         """
         Initialization of the A matrix.
 
