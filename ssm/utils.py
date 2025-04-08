@@ -10,7 +10,7 @@ def compute_hippo(N):
     :rtype: torch.Tensor
     """
     A = torch.zeros(N, N)
-    
+
     # Compute square roots
     idx = torch.arange(N)
     sqrt_terms = (2 * idx + 1).sqrt()
