@@ -28,7 +28,7 @@ class S4(torch.nn.Module):
         self,
         input_dim,
         model_dim,
-        hidden_dim,
+        hid_dim,
         output_dim,
         block_type="S4",
         n_layers=2,
@@ -64,9 +64,7 @@ class S4(torch.nn.Module):
         layers = []
         for _ in range(n_layers):
             layers.append(
-                block_class(
-                    hidden_dim=hidden_dim, input_dim=model_dim, **kwargs
-                )
+                block_class(hid_dim=hid_dim, input_dim=model_dim, **kwargs)
             )
             layers.append(func())
             layers.append(torch.nn.Linear(model_dim, model_dim))

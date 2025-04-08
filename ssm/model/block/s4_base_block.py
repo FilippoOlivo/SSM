@@ -36,6 +36,7 @@ class S4BaseBlock(S4BlockInterface):
         hid_dim: int,
         dt: float = 0.1,
         hippo: bool = False,
+        **kwargs,
     ):
         """
         Initialization of the basic S4 block.
@@ -45,9 +46,16 @@ class S4BaseBlock(S4BlockInterface):
         :param float dt: The time step for discretization.
         :param bool hippo: Whether to use the HIPPO matrix for initialization.
         """
-        super().__init__(input_dim=input_dim, hidden_dim=hid_dim, dt=dt)
         if hippo:
-            self.A = compute_hippo(hid_dim).repeat(input_dim, 1, 1)
+            A = compute_hippo(hid_dim).repeat(input_dim, 1, 1)
+        else:
+            A = torch.rand(input_dim, hid_dim, hid_dim)
+        B = torch.rand(input_dim, hid_dim, 1)
+        C = torch.rand(input_dim, 1, hid_dim)
+
+        super().__init__(
+            input_dim=input_dim, hid_dim=hid_dim, dt=dt, A=A, B=B, C=C
+        )
 
     def _compute_K(self, L):
         """
@@ -75,3 +83,18 @@ class S4BaseBlock(S4BlockInterface):
             A_pow = torch.bmm(self.A_bar, A_pow)
 
         return K
+
+    def _preprocess(self):
+        A_bar = self.A_bar.transpose(1, 2).unsqueeze(0)
+        B_bar = self.B_bar.squeeze(-1).unsqueeze(0)
+        C = self.C.transpose(1, 2).unsqueeze(0)
+        return A_bar, B_bar, C
+
+    @staticmethod
+    def _recurrent_step(A_bar, B_bar, C, x, y, h, t):
+        x_t = x[:, t, :]
+        Ah = torch.matmul(h.unsqueeze(-2), A_bar).squeeze(-2)
+        Bx = x_t.unsqueeze(-1) * B_bar
+        h = Ah + Bx
+        y[:, t, :] = torch.matmul(h.unsqueeze(-2), C).squeeze()
+        return h

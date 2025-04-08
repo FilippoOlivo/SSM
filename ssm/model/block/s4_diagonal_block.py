@@ -7,6 +7,7 @@ from ...utils import (
     compute_S4DReal,
 )
 
+
 class S4DBlock(S4BlockInterface):
     r"""
     Implementation of the diagonal S4 block.
@@ -46,6 +47,7 @@ class S4DBlock(S4BlockInterface):
         dt=0.1,
         initialization="S4D-Inv",
         discretization="bilinear",
+        **kwargs,
     ):
         """
         Initialization of the diagonal S4 block.
@@ -58,16 +60,22 @@ class S4DBlock(S4BlockInterface):
         :param str discretization: The method for discretizing the dynamics.
             Options are: bilinear, zoh.
         """
-        super().__init__(input_dim=input_dim, hid_dim=hid_dim, dt=dt)
 
         A = self.initialize_A(hid_dim, init_method=initialization)
-        A = torch.nn.Parameter(A.unsqueeze(0).repeat(input_dim, 1))
+        A = A.unsqueeze(0).repeat(input_dim, 1)
+        dtype = A.dtype
 
-        # COmpute B_bar and C_bar matrices
+        B = torch.rand(input_dim, hid_dim, dtype=dtype)
+        C = torch.rand(input_dim, hid_dim, dtype=dtype)
+
+        super().__init__(
+            input_dim=input_dim, hid_dim=hid_dim, dt=dt, A=A, B=B, C=C
+        )
+
         if discretization == "bilinear":
-            self.discretize = self._discretize_bilinear
+            self._discretize = self._discretize_bilinear
         elif discretization == "zoh":
-            self.discretize = self._discretize_zoh
+            self._discretize = self._discretize_zoh
         else:
             raise ValueError(f"Unknown discretization method: {discretization}")
 
@@ -76,7 +84,10 @@ class S4DBlock(S4BlockInterface):
         Discretization of the continuous-time dynamics to obtain the matrices
         :math:`A_{bar}` and :math:`B_{bar}`.
         """
-        self._discretize()
+        tmp = 1 + self.A * self.dt / 2
+        tmp2 = 1 - self.A * self.dt / 2
+        self.A_bar = 1 / tmp2 * tmp
+        self.B_bar = 1 / tmp2 * self.B * self.dt
 
     def _discretize_zoh(self):
         """
@@ -98,7 +109,7 @@ class S4DBlock(S4BlockInterface):
         V = self.A_bar.unsqueeze(-1) ** exponents
         return V
 
-    def compute_K(self, L):
+    def _compute_K(self, L):
         """
         Computation of the kernel K used in the convolutional method.
         """
@@ -108,7 +119,13 @@ class S4DBlock(S4BlockInterface):
         # Compute the kernel K using the Vandermonde matrix
         S = self.B_bar * self.C
         return torch.bmm(S.unsqueeze(1), V).squeeze(1).real
-    
+
+    @staticmethod
+    def _recurrent_step(A_bar, B_bar, C, x, y, h, t):
+        x_t = x[:, t, :]  # Extract the input at time t
+        h = A_bar.unsqueeze(0) * h + B_bar.unsqueeze(0) * x_t.unsqueeze(2)
+        y[:, t, :] = torch.sum(h * C.unsqueeze(0), dim=-1).real
+        return h
 
     @staticmethod
     def initialize_A(hid_dim, init_method="S4D-Inv"):

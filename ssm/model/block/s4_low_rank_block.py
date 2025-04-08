@@ -24,6 +24,7 @@ class S4LowRankBlock(S4BlockInterface):
         hid_dim: int,
         dt: float = 0.1,
         hippo: bool = True,
+        **kwargs,
     ):
         """
         Initialization of the low-rank S4 block.
@@ -33,13 +34,22 @@ class S4LowRankBlock(S4BlockInterface):
         :param float dt: The time step for discretization.
         :param bool hippo: Whether to use the HIPPO matrix for initialization.
         """
-        super().__init__(input_dim=input_dim, hid_dim=hid_dim, dt=dt)
 
-        self.B = torch.nn.Parameter(torch.rand(input_dim, hid_dim))
-        self.C_tilde = torch.nn.Parameter(torch.rand(input_dim, hid_dim))
+        B = torch.nn.Parameter(torch.rand(input_dim, hid_dim))
+        C_tilde = torch.nn.Parameter(torch.rand(input_dim, hid_dim))
+
+        super().__init__(
+            input_dim=input_dim,
+            hid_dim=hid_dim,
+            dt=dt,
+            A=torch.empty((1)),
+            B=B,
+            C=C_tilde,
+        )
+
         if hippo:
-            self.A = compute_hippo(hid_dim)
-            self.Lambda, self.P, self.Q = compute_dplr(self.A)
+            A = compute_hippo(hid_dim)
+            self.Lambda, self.P, self.Q = compute_dplr(A)
             self.Lambda = self.Lambda.unsqueeze(0).repeat(input_dim, 1, 1)
             self.P = self.P.repeat(input_dim, 1)
             self.Q = self.Q.repeat(input_dim, 1)
@@ -53,9 +63,11 @@ class S4LowRankBlock(S4BlockInterface):
         self.Q = torch.nn.Parameter(self.Q)
 
         self.register_buffer("omega", None)
+        del self.dt  # Remove existing dt variable (must be a torch.Tensor and
+        # must be moved into GPU memory)
         self.register_buffer("dt", torch.tensor([dt]))
 
-    def forward(self, x):
+    def forward_convolutional(self, x):
         """
         Forward pass.
 
@@ -101,7 +113,7 @@ class S4LowRankBlock(S4BlockInterface):
         :rtype: torch.Tensor
         """
         # Compute the matrices for the Cauchy product
-        a0, a1 = self.C_tilde.conj(), self.Q
+        a0, a1 = self.C.conj(), self.Q
         b0, b1 = self.B, self.P
 
         # Compute the denominator for the Cauchy product
@@ -155,3 +167,9 @@ class S4LowRankBlock(S4BlockInterface):
         :rtype: torch.Tensor
         """
         return torch.exp(2j * torch.pi * torch.arange(L) / L)
+
+    def _discretize(self):
+        pass
+
+    def forward_recurrent(self, x):
+        raise NotImplementedError

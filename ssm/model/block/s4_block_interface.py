@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import torch
 
+
 class S4BlockInterface(torch.nn.Module, ABC):
     r"""
     Implementation of the S4 block interface. Every S4 block should inherit
@@ -29,7 +30,7 @@ class S4BlockInterface(torch.nn.Module, ABC):
         DOI: `<https://doi.org/10.48550/arXiv.2111.00396>_`.
     """
 
-    def __new__(cls, method):
+    def __new__(cls, method, **kwargs):
         """
         Creation of a new instance of the class. It dynamically sets the forward
         function based on the specified `method`.
@@ -49,12 +50,7 @@ class S4BlockInterface(torch.nn.Module, ABC):
             raise ValueError(f"Unknown method: {method}")
         return instance
 
-    def __init__(
-        self,
-        input_dim: int,
-        hid_dim: int,
-        dt: float = 0.1,
-    ):
+    def __init__(self, input_dim: int, hid_dim: int, dt: float, A, B, C):
         """
         Initialization of the S4 block interface.
 
@@ -72,14 +68,15 @@ class S4BlockInterface(torch.nn.Module, ABC):
         # Initialize the identity matrix
         self.I = torch.eye(hid_dim).unsqueeze(0).expand(input_dim, -1, -1)
 
-        # Initialize matrices A, B, C
-        self.A = torch.nn.Parameter(torch.rand(input_dim, hid_dim, hid_dim))
-        self.B = torch.nn.Parameter(torch.rand(input_dim, hid_dim, 1))
-        self.C = torch.nn.Parameter(torch.rand(input_dim, 1, hid_dim))
+        self.A, self.B, self.C = (
+            torch.nn.Parameter(A),
+            torch.nn.Parameter(B),
+            torch.nn.Parameter(C),
+        )
 
         # Initialize matrices A_bar, B_bar
-        self.A_bar = None
-        self.B_bar = None
+        self.register_buffer("A_bar", torch.empty(A.shape))
+        self.register_buffer("B_bar", torch.empty(B.shape))
 
     def _discretize(self):
         """
@@ -108,13 +105,14 @@ class S4BlockInterface(torch.nn.Module, ABC):
         # Initialize the output tensor
         y = torch.empty(B, L, self.input_dim, device=x.device)
 
+        # Initialise initial hidden state
+        h = torch.zeros(B, self.input_dim, self.hid_dim, device=x.device)
+
+        A_bar, B_bar, C = self._preprocess()
+
         # Iterate over time steps
         for t in range(L):
-            x_t = x[:, t, :]
-            Ah = torch.matmul(h.unsqueeze(-2), self.A_bar).squeeze(-2)
-            Bx = x_t.unsqueeze(-1) * self.B_bar
-            h = Ah + Bx
-            y[:, t, :] = torch.matmul(h.unsqueeze(-2), self.C).squeeze()
+            h = self._recurrent_step(A_bar, B_bar, C, x, y, h, t)
 
         return y
 
@@ -175,3 +173,6 @@ class S4BlockInterface(torch.nn.Module, ABC):
         Computation of the kernel K used in the convolutional method.
         """
         pass
+
+    def _preprocess(self):
+        return self.A_bar, self.B_bar, self.C

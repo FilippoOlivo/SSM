@@ -9,14 +9,14 @@ def compute_hippo(N):
     :return: A (N, N) matrix initialized using the HIPPO method.
     :rtype: torch.Tensor
     """
-    A = torch.zeros(N,N)
+    A = torch.zeros(N, N)
     for n in range(N):
-        tmp = (2*n + 1) ** (1/2)
-        for k in range(n+1):
+        tmp = (2 * n + 1) ** (1 / 2)
+        for k in range(n + 1):
             if k == n:
-                A[n,k] = n+1
+                A[n, k] = n + 1
             else:
-                A[n,k] = tmp * (2 * k + 1) ** (1/2)
+                A[n, k] = tmp * (2 * k + 1) ** (1 / 2)
     return -A
 
 
