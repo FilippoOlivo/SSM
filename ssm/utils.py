@@ -10,13 +10,20 @@ def compute_hippo(N):
     :rtype: torch.Tensor
     """
     A = torch.zeros(N, N)
-    for n in range(N):
-        tmp = (2 * n + 1) ** (1 / 2)
-        for k in range(n + 1):
-            if k == n:
-                A[n, k] = n + 1
-            else:
-                A[n, k] = tmp * (2 * k + 1) ** (1 / 2)
+    
+    # Compute square roots
+    idx = torch.arange(N)
+    sqrt_terms = (2 * idx + 1).sqrt()
+
+    # Compute outer product
+    A = sqrt_terms[:, None] * sqrt_terms[None, :]
+
+    # Zero out the upper triangular part
+    A = torch.tril(A)
+
+    # Set diagonal to n + 1
+    A.diagonal().copy_(idx + 1)
+
     return -A
 
 
