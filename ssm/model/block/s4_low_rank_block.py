@@ -182,6 +182,3 @@ class S4LowRankBlock(S4BlockInterface):
         :rtype: torch.Tensor
         """
         return torch.exp(2j * torch.pi * torch.arange(L) / L)
-
-    def _discretize(self):
-        pass
