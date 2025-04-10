@@ -69,7 +69,6 @@ class S6Block(torch.nn.Module):
         input_dim,
         hid_dim,
         dt=0.1,
-        **kwargs,
     ):
         """
         Initialization of the S6 block.
@@ -77,7 +76,6 @@ class S6Block(torch.nn.Module):
         :param int input_dim: The input dimension.
         :param int hid_dim: The hidden dimension.
         :param float dt: The time step for discretization. Default is `0.1`.
-        :param dict kwargs: Additional keyword arguments.
         """
         super().__init__()
 
