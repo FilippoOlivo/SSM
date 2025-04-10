@@ -25,4 +25,4 @@ def test_s6_block_backward():
     y = model.forward(x.requires_grad_())
     _ = torch.mean(y).backward()
 
-    assert x._grad.shape == x.shape
+    assert x.grad.shape == x.shape
