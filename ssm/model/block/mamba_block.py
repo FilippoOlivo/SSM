@@ -1,20 +1,16 @@
 import warnings
 import torch
-from torch.nn import SiLU
-from .s4_base_block import S4BaseBlock
-from .s4_diagonal_block import S4DBlock
-from .s4_low_rank_block import S4LowRankBlock
-from .s6_block import S6Block
+from . import S4BaseBlock, S4DBlock, S4LowRankBlock, S6Block
 
 
 class MambaBlock(torch.nn.Module):
     def __init__(
         self,
-        input_dim: int,
-        expansion_factor: int,
-        kernel_size: int,
-        normalization: bool = False,
-        ssm_type: str = "S4",
+        input_dim,
+        expansion_factor,
+        kernel_size,
+        normalization=False,
+        ssm_type="S4",
         **kwargs,
     ):
         """
@@ -52,7 +48,7 @@ class MambaBlock(torch.nn.Module):
             expansion_factor * input_dim, input_dim
         )
         self.ssm = self._initialize_ssm_block(ssm_type, **kwargs)
-        self.silu = SiLU()
+        self.silu = torch.nn.SiLU()
         self.conv1d = torch.nn.Conv1d(
             in_channels=expansion_factor * input_dim,
             out_channels=expansion_factor * input_dim,
@@ -66,19 +62,20 @@ class MambaBlock(torch.nn.Module):
         else:
             self.norm = None
 
-    def forward(self, x: torch.Tensor):
-        l = x.shape[1]
+    def forward(self, x):
         x, x_res = self.input_net(x), self.silu(self.input_net_res(x))
-        x = self.conv1d(x.transpose(1, 2))[:, :, :l].transpose(1, 2)
+        x = self.conv1d(x.transpose(1, 2))[:, :, : x.shape[1]].transpose(1, 2)
         x = self.silu(x)
         x = self.ssm(x)
         x = x + x_res
+
         if self.norm is not None:
             x = self.norm(x)
+
         x = self.output_net(x)
         return x
 
-    def _initialize_ssm_block(self, ssm_type: str, **kwargs):
+    def _initialize_ssm_block(self, ssm_type, **kwargs):
         """
         Initialize the SSM block based on the specified type.
         """
