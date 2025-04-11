@@ -24,11 +24,19 @@ class Trainer:
         """
         Initialize the Trainer class.
 
-        :param model: The model to be trained.
-        :param dataset: The dataset to be used for training.
-        :param steps: Number of training steps.
-        :param logging_steps: Number of steps between logging.
-        :param device: Device to use for training, defaults to None.
+        :param torch.nn.Module model: The model to be trained.
+        :param ssm.dataset.CopyDataset dataset: The dataset to be used for
+            training.
+        :param int steps: The number of training steps.
+        :param int logging_steps: The number of steps between logging.
+        :param torch.device device: The device to use for training (CPU or GPU).
+        :param int test_steps: The number of test steps.
+        :param torch.optim.Optimizer optimizer_class: The optimizer class to use.
+        :param dict optimizer_params: The parameters for the optimizer.
+        :param bool enable_progress_bar: Whether to show a progress bar during
+            training.
+        :param bool tensorboard_logger: Whether to use TensorBoard for logging.
+        :param str logging_dir: The directory for TensorBoard logging.
         """
         self.dataset = iter(dataset)
         n_classes = dataset.alphabet_size
@@ -60,6 +68,9 @@ class Trainer:
             self.writer = SummaryWriter(log_dir=logging_dir)
 
     def fit(self):
+        """
+        Train the model
+        """
         self.move_to_device()
         self.model.train()
         pbar = tqdm(range(self.steps), disable=not self.enable_progress_bar)
@@ -86,6 +97,9 @@ class Trainer:
         print("Training complete.")
 
     def test(self):
+        """
+        Test the model
+        """
         self.move_to_device()
         self.model.eval()
         pbar = tqdm(
@@ -117,6 +131,13 @@ class Trainer:
 
     @staticmethod
     def set_device():
+        """
+        Determine the device to use for training (CPU or GPU). This method
+        checks for the availability of CUDA and Metal Performance Shaders
+        (MPS) on macOS. If neither is available, it defaults to CPU.
+        :return: The device to use for training.
+        :rtype: torch.device
+        """
         if torch.cuda.is_available():
             return torch.device("cuda")
         if torch.backends.mps.is_available():
@@ -125,6 +146,16 @@ class Trainer:
 
     @staticmethod
     def logging_folder(base_dir):
+        """
+        Determine the next available logging folder based on existing
+        directories in the specified base directory. The folder names are
+        expected to follow the format "version_X", where X is an integer
+        representing the version number.
+        :param str base_dir: The base directory where the logging folders are
+            located.
+        :return: The path to the next available logging folder.
+        :rtype: str
+        """
         idx = [
             name.split("version_")[-1]
             for name in os.listdir(base_dir)
@@ -139,7 +170,12 @@ class Trainer:
 
     def logging(self, pbar, steps, loss, accuracy):
         """
-        Log the training progress.
+        Log the training progress by updating the progress bar and writing
+        metrics to TensorBoard.
+        :param tqdm pbar: The progress bar object.
+        :param int steps: The current step number.
+        :param torch.Tensor loss: The current loss value.
+        :param torch.Tensor accuracy: The current accuracy value.
         """
         pbar.set_postfix(
             loss=loss.item(),
