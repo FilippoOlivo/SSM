@@ -3,7 +3,7 @@ from .block import MambaBlock
 
 
 class Mamba(torch.nn.Module):
-    def __init__(self, n_layers, **kwargs):
+    def __init__(self, n_layers, output_dim=None, **kwargs):
         """
         Initializes the Mamba model, by building a stack of Mamba blocks.
         :param int n_layers: number of Mamba blocks in the stack.
@@ -17,10 +17,16 @@ class Mamba(torch.nn.Module):
         """
         super().__init__()
         self.n_layers = n_layers
+
         mamba_blocks = torch.nn.ModuleList(
             [MambaBlock(**kwargs) for _ in range(n_layers)]
         )
+        self.input_dim = kwargs["input_dim"]
         self.mamba_blocks = torch.nn.Sequential(*mamba_blocks)
+        if output_dim is not None:
+            self.output_net = torch.nn.Linear(kwargs["input_dim"], output_dim)
+        else:
+            self.output_net = torch.nn.Identity()
 
     def forward(self, x):
         """
@@ -31,4 +37,5 @@ class Mamba(torch.nn.Module):
         :return: Output tensor.
         :rtype: torch.Tensor
         """
-        return self.mamba_blocks(x)
+        x = self.mamba_blocks(x)
+        return self.output_net(x)

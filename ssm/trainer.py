@@ -12,7 +12,7 @@ class Trainer:
         model,
         dataset,
         steps,
-        logging_steps,
+        logging_steps=0,
         device=None,
         test_steps=0,
         optimizer_class=torch.optim.Adam,
@@ -28,7 +28,10 @@ class Trainer:
         :param ssm.dataset.CopyDataset dataset: The dataset to be used for
             training.
         :param int steps: The number of training steps.
-        :param int logging_steps: The number of steps between logging.
+        :param int logging_steps: The number of steps between logging. For
+            logging it is meant both the update of the progress bar and the
+            TensorBoard logging. If you want to log only the progress bar
+            set `tensotrboard_logger` to `False`.
         :param torch.device device: The device to use for training (CPU or GPU).
         :param int test_steps: The number of test steps.
         :param torch.optim.Optimizer optimizer_class: The optimizer class to use.
@@ -53,7 +56,7 @@ class Trainer:
         self.accuracy = Accuracy(
             task="multiclass", num_classes=n_classes, ignore_index=-1
         )
-        if tensorboard_logger:
+        if tensorboard_logger and logging_steps > 0:
             from torch.utils.tensorboard import SummaryWriter
 
             if logging_dir is None:
@@ -66,6 +69,7 @@ class Trainer:
             logging_dir = self.logging_folder(logging_dir)
             os.makedirs(logging_dir)
             self.writer = SummaryWriter(log_dir=logging_dir)
+            self.logging = self.tensorboard_wrapper(self.logging)
 
     def fit(self):
         """
@@ -93,8 +97,6 @@ class Trainer:
 
             if i % self.logging_steps == 0:
                 self.logging(pbar, i, loss, accuracy)
-        self.writer.close()
-        print("Training complete.")
 
     def test(self):
         """
@@ -121,6 +123,14 @@ class Trainer:
                 accuracy += self.accuracy(output, y)
         print(f"Test Loss: {loss / self.test_steps}")
         print(f"Test Accuracy: {accuracy / self.test_steps}")
+
+        self.write_on_tensorboard(
+            "test/loss", loss / self.test_steps, self.test_steps
+        )
+        self.write_on_tensorboard(
+            "test/accuracy", accuracy / self.test_steps, self.test_steps
+        )
+        self.writer.close()
 
     def move_to_device(self):
         """
@@ -181,6 +191,21 @@ class Trainer:
             loss=loss.item(),
             accuracy=accuracy.item(),
         )
-        self.writer.add_scalar("loss", loss.item(), steps)
-        self.writer.add_scalar("accuracy", accuracy.item(), steps)
-        self.writer.flush()
+
+    def write_on_tensorboard(self, name, value, step):
+        """
+        Write a scalar value to TensorBoard.
+        :param str name: The name of the scalar value.
+        :param float value: The value to write.
+        :param int step: The current step number.
+        """
+        self.writer.add_scalar(name, value, step)
+
+    def tensorboard_wrapper(self, func):
+        def wrapped(pbar, steps, loss, accuracy):
+            func(pbar, steps, loss, accuracy)
+            self.write_on_tensorboard("train/loss", loss.item(), steps)
+            self.write_on_tensorboard("train/accuracy", accuracy.item(), steps)
+            self.writer.flush()
+
+        return wrapped
