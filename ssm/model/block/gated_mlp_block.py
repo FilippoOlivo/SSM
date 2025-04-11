@@ -56,7 +56,6 @@ class GatedMLPBlock(torch.nn.Module):
 
         :param int input_dim: The input dimension.
         :param int hid_dim: The hidden dimension.
-        :param dict kwargs: Additional arguments for the class constructor.
         :param str activation: The activation function to use. Available options
             are: `"silu"`, `"swish"`. Default is `"silu"`.
         :param float beta: The parameter for the Swish function. Default is 1.0.
