@@ -89,7 +89,6 @@ class MambaBlock(torch.nn.Module):
         x = self.silu(x)
         x = self.ssm(x)
         x = x * x_res
-
         if self.norm is not None:
             x = self.norm(x)
         x = self.output_net(x)
