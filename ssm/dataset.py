@@ -3,7 +3,7 @@ from torch.func import vmap
 from torch.utils.data import IterableDataset
 
 
-class IterableCopyDataset(IterableDataset):
+class CopyDataset(IterableDataset):
     """
     A dataset composed of an infinite number of samples for copy/selective
     copy tasks. It generates samples on-the-fly.
