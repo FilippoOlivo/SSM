@@ -47,8 +47,8 @@ class S4DBlock(S4BlockInterface):
         method,
         dt=0.1,
         initialization="S4D-Inv",
-        imag_random=False,
         real_random=False,
+        imag_random=False,
         discretization="bilinear",
         **kwargs,
     ):
@@ -63,6 +63,10 @@ class S4DBlock(S4BlockInterface):
         :param str initialization: The method for initializing the A matrix.
             Options are: S4D-Inv, S4D-Lin, S4D-Quad, S4D-Real.
             Default is `"S4D-Inv"`.
+        :param bool real_random: If `True`, the real part of the A matrix is
+            initialized at random between 0 and 1. Default is `False`.
+        :param bool imag_random: If `True`, the imaginary part of the A matrix
+            is initialized at random between 0 and 1. Default is `False`.
         :param str discretization: The method for discretizing the dynamics.
             Options are: bilinear, zoh. Default is `"bilinear"`.
         :param dict kwargs: Additional arguments for the class constructor.
@@ -175,9 +179,10 @@ class S4DBlock(S4BlockInterface):
         :param int hid_dim: The hidden state dimension.
         :param str init_method: The method for initializing the A matrix.
             Options are: S4D-Inv, S4D-Lin, S4D-Quad, S4D-Real.
-        :param bool real_random: If True, initialize the real part randomly.
-        :param bool imag_random: If True, initialize the imaginary part
-            randomly.
+        :param bool real_random: If `True`, the real part of the A matrix is
+            initialized at random between 0 and 1. Default is `False`.
+        :param bool imag_random: If `True`, the imaginary part of the A matrix
+            is initialized at random between 0 and 1. Default is `False`.
         :return: The initialized A matrix.
         :rtype: torch.Tensor
         :raises ValueError: If an unknown initialization method is provided.
@@ -194,9 +199,9 @@ class S4DBlock(S4BlockInterface):
             )
 
         elif init_method == "S4D-Quad":
-            return compute_S4DQuad(hid_dim, random_real=real_random)
+            return compute_S4DQuad(hid_dim, real_random=real_random)
 
         elif init_method == "S4D-Real":
-            return compute_S4DReal(hid_dim, random_real=real_random)
+            return compute_S4DReal(hid_dim, real_random=real_random)
         else:
             raise ValueError(f"Unknown initialization method: {init_method}")

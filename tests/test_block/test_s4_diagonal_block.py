@@ -9,16 +9,16 @@ x = torch.rand(1000, 25, 5)
 @pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad"])
 @pytest.mark.parametrize("real_random", [True, False])
 @pytest.mark.parametrize("imag_random", [True, False])
-@pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
+@pytest.mark.parametrize("discretization", ["bilinear", "zoh"])
 def test_s4_diagonal_block_constructor(
-    method, init_method, discretisation, imag_random, real_random
+    method, init_method, discretization, imag_random, real_random
 ):
     model = S4DBlock(
         input_dim=5,
         hid_dim=10,
         method=method,
         initialization=init_method,
-        discretization=discretisation,
+        discretization=discretization,
         real_random=real_random,
         imag_random=imag_random,
     )
@@ -51,17 +51,17 @@ def test_s4_diagonal_block_constructor(
 @pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad"])
 @pytest.mark.parametrize("real_random", [True, False])
 @pytest.mark.parametrize("imag_random", [True, False])
-@pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
+@pytest.mark.parametrize("discretization", ["bilinear", "zoh"])
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 def test_s4_diagonal_block_forward(
-    method, init_method, discretisation, real_random, imag_random
+    method, init_method, discretization, real_random, imag_random
 ):
     model = S4DBlock(
         input_dim=5,
         hid_dim=10,
         method=method,
         initialization=init_method,
-        discretization=discretisation,
+        discretization=discretization,
         real_random=real_random,
         imag_random=imag_random,
     )
@@ -72,17 +72,17 @@ def test_s4_diagonal_block_forward(
 @pytest.mark.parametrize("init_method", ["S4D-Inv", "S4D-Lin", "S4D-Quad"])
 @pytest.mark.parametrize("real_random", [True, False])
 @pytest.mark.parametrize("imag_random", [True, False])
-@pytest.mark.parametrize("discretisation", ["bilinear", "zoh"])
+@pytest.mark.parametrize("discretization", ["bilinear", "zoh"])
 @pytest.mark.parametrize("method", ["recurrent", "convolutional"])
 def test_s4_diagonal_block_backward(
-    method, init_method, discretisation, real_random, imag_random
+    method, init_method, discretization, real_random, imag_random
 ):
     model = S4DBlock(
         input_dim=5,
         hid_dim=10,
         method=method,
         initialization=init_method,
-        discretization=discretisation,
+        discretization=discretization,
         real_random=real_random,
         imag_random=imag_random,
     )
