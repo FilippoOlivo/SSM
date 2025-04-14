@@ -26,5 +26,6 @@ trainer:
     test_steps: 10
     logging_steps: 5
     logging_dir: "tests/logs/testing_logs"
+    device: "cpu"
 
   

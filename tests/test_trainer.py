@@ -52,6 +52,7 @@ def test_constructor(model):
         logging_steps=10,
         dataset=dataset,
         logging_dir="tests/logs/",
+        device="cpu",
     )
 
 
@@ -64,6 +65,7 @@ def test_fit(model):
         test_steps=10,
         logging_steps=10,
         logging_dir="tests/logs/",
+        device="cpu",
     )
     trainer.fit()
     import shutil
@@ -81,6 +83,7 @@ def test_tensorboard_logging(tensorboard_logger):
         logging_steps=10,
         tensorboard_logger=tensorboard_logger,
         logging_dir="tests/logs/",
+        device="cpu",
     )
     trainer.fit()
     import shutil
@@ -103,6 +106,7 @@ def test_custom_optimizer():
         logging_steps=10,
         optimizer_params={"lr": 0.05, "weight_decay": 0.1},
         logging_dir="tests/logs/",
+        device="cpu",
     )
     assert isinstance(trainer.optimizer, optim.Adam)
     assert trainer.optimizer.param_groups[0]["lr"] == 0.05
@@ -117,6 +121,7 @@ def test_custom_optimizer():
         optimizer_class=optim.SGD,
         optimizer_params={"lr": 0.07, "momentum": 0.9},
         logging_dir="tests/logs/",
+        device="cpu",
     )
     assert isinstance(trainer.optimizer, optim.SGD)
     assert trainer.optimizer.param_groups[0]["lr"] == 0.07
@@ -132,6 +137,7 @@ def test_test(model):
         test_steps=10,
         logging_steps=10,
         logging_dir="tests/logs/",
+        device="cpu",
     )
     trainer.fit()
     trainer.test()
@@ -149,6 +155,7 @@ def test_accumulation_steps():
         logging_steps=10,
         accumulation_steps=2,
         logging_dir="tests/logs/",
+        device="cpu",
     )
     trainer.fit()
     import shutil

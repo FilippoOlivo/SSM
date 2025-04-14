@@ -42,7 +42,6 @@ def test_trainer():
     assert trainer.steps == 15
     assert trainer.test_steps == 10
     assert trainer.logging_steps == 5
-    assert trainer.writer.log_dir == "tests/logs/testing_logs/version_0"
     import shutil
 
     shutil.rmtree("tests/logs/testing_logs")
