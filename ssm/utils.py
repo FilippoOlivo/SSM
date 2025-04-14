@@ -27,7 +27,7 @@ def compute_hippo(N):
     return -A
 
 
-def compute_S4DInv(N):
+def compute_S4DInv(N, real_random=False, imag_random=False):
     """
     Construct the S4D-Inv matrix A.
 
@@ -35,11 +35,19 @@ def compute_S4DInv(N):
     :return: The computed matrix A.
     :rtype: torch.Tensor
     """
+    if real_random:
+        real_part = -torch.rand(N, dtype=torch.float32)
+    else:
+        real_part = -torch.ones(N, dtype=torch.float32) * 1 / 2
+    if imag_random:
+        imag_part = torch.rand(N, dtype=torch.float32)
+    else:
+        imag_part = torch.arange(N, dtype=torch.float32)
     n = torch.arange(N, dtype=torch.float32)
-    return -0.5 + 1j * (N / torch.pi) * (N / (2 * n + 1) - 1)
+    return real_part + 1j * (N / torch.pi) * (N / (2 * imag_part + 1) - 1)
 
 
-def compute_S4DLin(N):
+def compute_S4DLin(N, real_random=False, imag_random=False):
     """
     Construct the S4D-Lin matrix A.
 
@@ -47,11 +55,18 @@ def compute_S4DLin(N):
     :return: The computed matrix A.
     :rtype: torch.Tensor
     """
-    n = torch.arange(N, dtype=torch.float32)
-    return -0.5 + 1j * (n * torch.pi)
+    if real_random:
+        real_part = -torch.rand(N, dtype=torch.float32)
+    else:
+        real_part = -torch.ones(N, dtype=torch.float32) * 1 / 2
+    if imag_random:
+        imag_part = torch.rand(N, dtype=torch.float32)
+    else:
+        imag_part = torch.arange(N, dtype=torch.float32)
+    return real_part + 1j * (imag_part * torch.pi)
 
 
-def compute_S4DQuad(N):
+def compute_S4DQuad(N, random_real=False):
     """
     Construct the S4D-Quad matrix A.
 
@@ -59,11 +74,14 @@ def compute_S4DQuad(N):
     :return: The computed matrix A.
     :rtype: torch.Tensor
     """
-    n = torch.arange(N, dtype=torch.float32)
-    return 1 / torch.pi * (1 + 2 * n) ** 2
+    if random_real:
+        real_part = torch.rand(N, dtype=torch.float32)
+    else:
+        real_part = torch.arange(N, dtype=torch.float32)
+    return 1 / torch.pi * (1 + 2 * real_part) ** 2
 
 
-def compute_S4DReal(N):
+def compute_S4DReal(N, random_real=False):
     """
     Construct the S4D-Real matrix A.
 
@@ -71,7 +89,12 @@ def compute_S4DReal(N):
     :return: The computed matrix A.
     :rtype: torch.Tensor
     """
-    return -(torch.rand(N) + 1)
+    if random_real:
+        real_part = torch.rand(N, dtype=torch.float32)
+    else:
+        real_part = torch.arange(N, dtype=torch.float32)
+
+    return -(real_part + 1)
 
 
 def compute_dplr(A):
