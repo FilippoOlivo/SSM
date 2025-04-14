@@ -25,18 +25,15 @@ class TrainingCLI:
         :param str config_file: Path to the configuration file.
 
         """
+        self.args = self.argparsing()
         if config_file is None:
-            args = self.argparsing()
-            config_file = args.config_file
+            config_file = self.args.config_file
         config = self.load_config(config_file)
         model = self.init_model(config["model"])
         dataset = CopyDataset(**config["dataset"])
         trainer_config = config["trainer"]
-        trainer_config["model"] = model
         trainer_config["dataset"] = dataset
         self.trainer = self.init_trainer(trainer_config, model, dataset)
-        self.trainer.fit()
-        self.trainer.test()
 
     def load_config(self, config_file):
         """
@@ -57,11 +54,14 @@ class TrainingCLI:
         :return: Model instance.
         :rtype: torch.nn.Module
         """
-        model_path = model_config.pop("model_type")  # "ssm.model.S4"
-        module_name, class_name = model_path.rsplit(".", 1)
-        module = importlib.import_module(module_name)
-        model_class = getattr(module, class_name)
-        return model_class(**model_config)
+        for k, v in model_config.items():
+            if isinstance(v, str) and (
+                v.startswith("torch.") or v.startswith("ssm.")
+            ):
+                module_name, class_name = v.rsplit(".", 1)
+                module = importlib.import_module(module_name)
+                model_config[k] = getattr(module, class_name)
+        return model_config.pop("model")(**model_config)
 
     @staticmethod
     def init_trainer(trainer_config, model, dataset):
@@ -93,8 +93,44 @@ class TrainingCLI:
         """
         parser = argparse.ArgumentParser(description="Training CLI")
         parser.add_argument(
-            "config_file",
+            "--config_file",
             type=str,
             help="Path to the configuration file",
         )
+        parser.add_argument(
+            "--train",
+            type=bool,
+            default=True,
+            help="Train the model",
+        )
+        parser.add_argument(
+            "--test",
+            type=bool,
+            default=False,
+            help="Test the model",
+        )
         return parser.parse_args()
+
+    def train(self):
+        """
+        Start the training process.
+        :return: None
+        """
+        self.trainer.train()
+
+    def test(self):
+        """
+        Start the testing process.
+        :return: None
+        """
+        self.trainer.test()
+
+    def __call__(self):
+        """
+        Call the train method to start training.
+        :return: None
+        """
+        if self.args.train:
+            self.train()
+        if self.args.test:
+            self.test()

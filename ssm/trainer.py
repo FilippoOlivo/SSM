@@ -12,6 +12,7 @@ class Trainer:
         model,
         dataset,
         steps,
+        accumulation_steps=1,
         logging_steps=0,
         device=None,
         test_steps=0,
@@ -28,6 +29,8 @@ class Trainer:
         :param ssm.dataset.CopyDataset dataset: The dataset to be used for
             training.
         :param int steps: The number of training steps.
+        :param int accumulation_steps: The number of steps to accumulate
+            gradients before updating the model parameters.
         :param int logging_steps: The number of steps between logging. For
             logging it is meant both the update of the progress bar and the
             TensorBoard logging. If you want to log only the progress bar
@@ -45,6 +48,7 @@ class Trainer:
         n_classes = dataset.alphabet_size
         self.model = EmbeddingBlock(model, n_classes)
         self.steps = steps
+        self.accumulation_steps = accumulation_steps
         self.test_steps = test_steps
         self.logging_steps = logging_steps
         self.device = device if device else self.set_device()
@@ -87,13 +91,16 @@ class Trainer:
             output = self.model(x).permute(0, 2, 1)
 
             # Compute loss
-            loss = self.loss(output, y)
+            loss = self.loss(output, y) / self.accumulation_steps
             accuracy = self.accuracy(output, y)
 
             # Backward pass and optimization
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+            if i % self.accumulation_steps == 0:
+                self.optimizer.step()
+                self.optimizer.zero_grad()
 
             if i % self.logging_steps == 0:
                 self.logging(pbar, i, loss, accuracy)
