@@ -27,6 +27,8 @@ class H3Block(torch.nn.Module):
         dt=0.1,
         initialization="S4D-Inv",
         discretization="bilinear",
+        real_random=False,
+        imag_random=False,
         **kwargs,
     ):
         """
@@ -45,6 +47,12 @@ class H3Block(torch.nn.Module):
         :param str discretization: The method for discretizing the dynamics of
             the diagonal S4 block.
             Options are: bilinear, zoh. Default is `"bilinear"`.
+        :param bool real_random: If `True`, the real part of the A matrix of the
+            diagonal block is initialized at random between 0 and 1.
+            Default is `False`.
+        :param bool imag_random: If `True`, the imaginary part of the A matrix
+            of the diagonal block is initialized at random between 0 and 1.
+            Default is `False`.
         :param dict kwargs: Additional arguments for the class constructor.
         :raises ValueError: If the number of heads is not a divisor of the
             input dimension.
@@ -76,6 +84,8 @@ class H3Block(torch.nn.Module):
             dt=dt,
             initialization=initialization,
             discretization=discretization,
+            real_random=real_random,
+            imag_random=imag_random,
             **kwargs,
         )
 

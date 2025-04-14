@@ -37,6 +37,8 @@ class H3(torch.nn.Module):
         n_layers=2,
         normalization=False,
         activation=torch.nn.ReLU,
+        real_random=False,
+        imag_random=False,
         **kwargs,
     ):
         """
@@ -60,6 +62,12 @@ class H3(torch.nn.Module):
             Default is `False`.
         :param torch.nn.Module activation: The activation function.
             Default is `torch.nn.ReLU`.
+        :param bool real_random: If `True`, the real part of the A matrix of the
+            diagonal block is initialized at random between 0 and 1.
+            Default is `False`.
+        :param bool imag_random: If `True`, the imaginary part of the A matrix
+            of the diagonal block is initialized at random between 0 and 1.
+            Default is `False`.
         :param dict kwargs: Additional arguments for the class constructor.
         """
         super().__init__()
@@ -76,6 +84,8 @@ class H3(torch.nn.Module):
                     dt=dt,
                     initialization=initialization,
                     discretization=discretization,
+                    real_random=real_random,
+                    imag_random=imag_random,
                     **kwargs,
                 )
             )
