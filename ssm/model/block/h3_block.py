@@ -25,6 +25,8 @@ class H3Block(torch.nn.Module):
         method,
         heads,
         dt=0.1,
+        initialization="S4D-Inv",
+        discretization="bilinear",
         **kwargs,
     ):
         """
@@ -37,6 +39,12 @@ class H3Block(torch.nn.Module):
         :param int heads: The number of attention heads. It must be a divisor of
             the input dimension.
         :param float dt: The time step for discretization. Default is `0.1`.
+        :param str initialization: The method for initializing the A matrix in
+            the diagonal S4 block. Options are: S4D-Inv, S4D-Lin, S4D-Quad,
+            S4D-Real, real, complex. Default is `"S4D-Inv"`.
+        :param str discretization: The method for discretizing the dynamics of
+            the diagonal S4 block.
+            Options are: bilinear, zoh. Default is `"bilinear"`.
         :param dict kwargs: Additional arguments for the class constructor.
         :raises ValueError: If the number of heads is not a divisor of the
             input dimension.
@@ -66,6 +74,8 @@ class H3Block(torch.nn.Module):
             hid_dim=hid_dim,
             method=method,
             dt=dt,
+            initialization=initialization,
+            discretization=discretization,
             **kwargs,
         )
 
