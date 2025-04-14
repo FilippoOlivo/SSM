@@ -20,7 +20,7 @@ class CopyDataset(IterableDataset):
     ):
         """
         Initialize the dataset.
-        :param int N: Number of samples to generate.
+
         :param int sequence_len: Length of the input sequence.
         :param int mem_tokens: Number of tokens to be copied.
         :param int alphabet_size: Size of the alphabet (number of unique tokens).
@@ -43,8 +43,8 @@ class CopyDataset(IterableDataset):
         """
         Randomly permute the input tensor in order to create a selective copy
         dataset.
-        :param t: Input tensor to be permuted.
-        :type t: torch.Tensor
+
+        :param torch.Tensor t: Input tensor to be permuted.
         :return: Permuted tensor.
         :rtype: torch.Tensor
         """

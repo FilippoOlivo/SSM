@@ -7,8 +7,8 @@ class EmbeddingBlock(torch.nn.Module):
         """
         Initialize the embedding block.
 
-        :param int input_dim: Dimension of the input.
-        :param int output_dim: Dimension of the output.
+        :param torch.nn.Module model: The model to be used.
+        :param int embedding_dim: The dimension of the embedding layer.
         """
         super().__init__()
         self.embedding = torch.nn.Embedding(embedding_dim, model.input_dim)

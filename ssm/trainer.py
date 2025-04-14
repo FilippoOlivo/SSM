@@ -209,6 +209,16 @@ class Trainer:
         self.writer.add_scalar(name, value, step)
 
     def tensorboard_wrapper(self, func):
+        """
+        Wrap the logging function to include TensorBoard logging.
+
+        :param function func: The original logging function which updates the
+            progress bar.
+        :return: The wrapped logging function used to log loss and accuracy
+            on TensorBoard.
+        :rtype: function
+        """
+
         def wrapped(pbar, steps, loss, accuracy):
             func(pbar, steps, loss, accuracy)
             self.write_on_tensorboard("train/loss", loss.item(), steps)

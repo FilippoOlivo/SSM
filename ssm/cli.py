@@ -67,10 +67,10 @@ class TrainingCLI:
     def init_trainer(trainer_config, model, dataset):
         """
         Initialize the trainer with the given configuration.
+
         :param dict trainer_config: Trainer configuration dictionary.
         :param model: Model instance.
-        :param
-        dataset: Dataset instance.
+        :param dataset: Dataset instance.
         :return: Trainer instance.
         :rtype: Trainer
         """
@@ -98,7 +98,7 @@ class TrainingCLI:
             help="Path to the configuration file",
         )
         parser.add_argument(
-            "--train",
+            "--fit",
             type=bool,
             default=True,
             help="Train the model",
@@ -111,12 +111,12 @@ class TrainingCLI:
         )
         return parser.parse_args()
 
-    def train(self):
+    def fit(self):
         """
         Start the training process.
         :return: None
         """
-        self.trainer.train()
+        self.trainer.fit()
 
     def test(self):
         """
@@ -130,7 +130,7 @@ class TrainingCLI:
         Call the train method to start training.
         :return: None
         """
-        if self.args.train:
-            self.train()
+        if self.args.fit:
+            self.fit()
         if self.args.test:
             self.test()

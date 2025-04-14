@@ -7,6 +7,8 @@ class Mamba(torch.nn.Module):
         """
         Initializes the Mamba model, by building a stack of Mamba blocks.
         :param int n_layers: number of Mamba blocks in the stack.
+        :param int output_dim: dimension of the output layer. If None, the
+            output layer is an identity layer.
         :param dict kwargs: arguments for the MambaBlock constructor.
 
         .. seealso::
