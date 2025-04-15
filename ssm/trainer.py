@@ -89,7 +89,7 @@ class Trainer:
             # Forward pass and loss computation
             loss, accuracy = self.compute_metrics(self.model(x), y)
             loss = loss / self.accumulation_steps
-            
+
             # Backward pass and optimization
             self.optimizer.zero_grad()
             loss.backward()
@@ -143,7 +143,7 @@ class Trainer:
         :return: The loss and accuracy values.
         :rtype: tuple
         """
-        output = output.permute(0, 2, 1)[..., -self.mem_tokens:]
+        output = output.permute(0, 2, 1)[..., -self.mem_tokens :]
         loss = self.loss(output, y)
         accuracy = self.accuracy(output, y)
         return loss, accuracy

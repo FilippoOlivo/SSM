@@ -11,8 +11,9 @@ class EmbeddingBlock(torch.nn.Module):
         :param int embedding_dim: The dimension of the embedding layer.
         """
         super().__init__()
-        self.embedding = torch.nn.Embedding(embedding_dim, model.input_dim, 
-            padding_idx=0)
+        self.embedding = torch.nn.Embedding(
+            embedding_dim, model.input_dim, padding_idx=0
+        )
         self.model = model
         self.softmax = Softmax(dim=-1)
 

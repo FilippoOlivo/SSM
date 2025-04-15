@@ -38,7 +38,7 @@ def test_generate_data(selective, mem_tokens, sequence_len):
     expected_target_shape = (32, mem_tokens)
     assert input_.shape == expected_input_shape
     assert target.shape == expected_target_shape
-    
+
     mask = (input_ > 0) & (input_ < 4)
     assert mask.sum() == 32 * mem_tokens
 

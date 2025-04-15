@@ -53,23 +53,57 @@ class CopyDataset(IterableDataset):
 
     def generate_data(self):
         N = self.batch_size
-        tokens = torch.randint(low=1, high=self.alphabet_size-1, size=(N, self.mem_tokens,))
+        tokens = torch.randint(
+            low=1,
+            high=self.alphabet_size - 1,
+            size=(
+                N,
+                self.mem_tokens,
+            ),
+        )
         if self.selective:
-            inds = torch.stack([
-                torch.randperm(self.sequence_len+self.mem_tokens)[:self.mem_tokens]
-                for _ in range(N)
-                ], 0)
-            inds = inds.reshape((N, self.mem_tokens,))
+            inds = torch.stack(
+                [
+                    torch.randperm(self.sequence_len + self.mem_tokens)[
+                        : self.mem_tokens
+                    ]
+                    for _ in range(N)
+                ],
+                0,
+            )
+            inds = inds.reshape(
+                (
+                    N,
+                    self.mem_tokens,
+                )
+            )
             inds, _ = inds.sort()
         else:
-            inds = torch.arange(self.mem_tokens).repeat((N, 1,))
-        zeros_x = torch.zeros((N, self.mem_tokens+self.sequence_len,), dtype=torch.long)
+            inds = torch.arange(self.mem_tokens).repeat(
+                (
+                    N,
+                    1,
+                )
+            )
+        zeros_x = torch.zeros(
+            (
+                N,
+                self.mem_tokens + self.sequence_len,
+            ),
+            dtype=torch.long,
+        )
         zeros_x.scatter_(-1, inds, tokens)
-        markers = (self.alphabet_size-1) * torch.ones((N, self.mem_tokens,), dtype=torch.long)
+        markers = (self.alphabet_size - 1) * torch.ones(
+            (
+                N,
+                self.mem_tokens,
+            ),
+            dtype=torch.long,
+        )
 
         x = torch.cat([zeros_x, markers], dim=-1)
         y = torch.cat([tokens], dim=-1)
-        
+
         return x, y
 
     def __iter__(self):
