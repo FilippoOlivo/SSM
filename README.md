@@ -16,18 +16,10 @@ This project investigates **structured variants of SSMs** with a focus on comput
 - **Gated MLP**
 - **Mamba**
 
-The primary objective is to perform a comparative analysis of the aforementioned models based on the following criteria:
+The primary objective is to perform a comparative analysis of the aforementioned models based on the following criteria: accuracy, training time, memory consumption.
 
-- **Accuracy**
-- **Training time**
-- **Memory consumption**
-
-To ensure consistency and relevance, the evaluation is conducted on synthetic sequence modeling tasks, including:
-
-- **Copy task**
-- **Selective copy task**
-
-These tasks serve as controlled benchmarks to assess the models' ability to retain and manipulate sequential information over long contexts.
+To ensure consistency and relevance, the evaluation is conducted on synthetic sequence modeling tasks, including
+copy task, and selective copy task. These tasks serve as controlled benchmarks to assess the models' ability to retain and manipulate sequential information over long contexts.
 
 
 ## Setup Instructions
