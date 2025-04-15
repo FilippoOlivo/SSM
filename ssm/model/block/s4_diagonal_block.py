@@ -79,8 +79,8 @@ class S4DBlock(S4BlockInterface):
             imag_random=imag_random,
         )
         A = A.unsqueeze(0).repeat(input_dim, 1)
-        B = torch.rand(input_dim, hid_dim, dtype=A.dtype)
-        C = torch.rand(input_dim, hid_dim, dtype=A.dtype)
+        B = torch.rand(input_dim, hid_dim)
+        C = torch.rand(input_dim, hid_dim)
 
         super().__init__(
             input_dim=input_dim,

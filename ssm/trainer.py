@@ -102,8 +102,10 @@ class Trainer:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
-            if i % self.logging_steps == 0:
-                self.logging(pbar, i, loss, accuracy)
+            if int(i / self.accumulation_steps) % self.logging_steps == 0:
+                self.logging(
+                    pbar, int(i / self.accumulation_steps), loss, accuracy
+                )
 
     def test(self):
         """
