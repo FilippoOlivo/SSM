@@ -1,25 +1,27 @@
 model:
   model: ssm.model.S6
-  block_type: "S6"
   input_dim: 16
-  hid_dim: 64
-  model_dim: 64
+  hid_dim: 128
   output_dim: 16
   n_layers: 2
-  activation: torch.nn.SiLU
+  activation: torch.nn.Identity
 
 dataset:
-    sequence_len: 1024
-    batch_size: 32
+    sequence_len: 64
+    batch_size: 64
     alphabet_size: 16
     mem_tokens: 16
-    marker: -1
-    selective: True
+    marker: 0
+    selective: False
 
 trainer:
-    steps: 100000
+    steps: 400000
     test_steps: 10
-    logging_steps: 10
-    logging_dir: "logs/s6_copy"
+    logging_steps: 20
+    logging_dir: "logs/s6_selective_copy"
+    enable_progress_bar: True
+    optimizer_class: torch.optim.AdamW
+    optimizer_params:
+        lr: .0001
 
   

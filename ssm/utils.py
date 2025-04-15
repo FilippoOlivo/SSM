@@ -101,10 +101,10 @@ def compute_S4DReal(N, real_random=False):
     :rtype: torch.Tensor
     """
     if real_random:
-        real_part = torch.rand(N, dtype=torch.float32) * 0.1
+        real_part = torch.rand(N, dtype=torch.float32)
     else:
         real_part = torch.arange(1, N + 1, dtype=torch.float32)
-    return -1 * (real_part + 1)
+    return -(real_part + 1)
 
 
 def compute_dplr(A):
