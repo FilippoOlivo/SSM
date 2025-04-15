@@ -45,4 +45,4 @@ def test_generate_data(selective, mem_tokens, sequence_len):
     assert mask.sum() == 32 * mem_tokens
 
     mask = (input_[:, :mem_tokens] > 0) & (input_[:, :mem_tokens] < 4)
-    assert not mask.all().item() == selective
+    assert not (mask.all().item() == selective)
