@@ -1,6 +1,6 @@
 model:
   model: ssm.model.S4
-  block_type: "S4D"
+  block_type: "S4LowRank"
   method: "convolutional"
   activation: torch.nn.GELU
   input_dim: 16
@@ -8,10 +8,11 @@ model:
   model_dim: 64
   output_dim: 16
   n_layers: 2
-  initialization: "S4D-Real"
-  discretization: "bilinear"
-  random_real: True
-  dt: .001
+  hippo: True
+  dt: .1
 
 trainer:
     logging_dir: "logs/s4d_copy"
+
+
+  

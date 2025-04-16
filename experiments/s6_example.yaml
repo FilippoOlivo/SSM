@@ -4,26 +4,9 @@ model:
   hid_dim: 128
   output_dim: 16
   n_layers: 2
-  dt: 0.01
-  
-dataset:
-    sequence_len: 512
-    batch_size: 32
-    alphabet_size: 16
-    mem_tokens: 16
-    marker: 0
-    selective: False
+  activation: torch.nn.SiLU
 
 trainer:
-    steps: 400000
-    test_steps: 10
-    logging_steps: 20
     logging_dir: "logs/s6_copy"
-    enable_progress_bar: True
-    optimizer_class: torch.optim.AdamW
-    optimizer_params:
-        lr: 0.0001
-    device: "cuda"
-
 
   
