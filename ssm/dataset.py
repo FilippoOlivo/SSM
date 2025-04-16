@@ -61,7 +61,7 @@ class CopyDataset(IterableDataset):
         :return: Tuple of input and output tensors.
         :rtype: tuple(torch.Tensor, torch.Tensor)
         """
-        
+
         N = self.batch_size
         tokens = torch.randint(
             low=1,
