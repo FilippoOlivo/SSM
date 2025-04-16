@@ -86,7 +86,7 @@ class Trainer:
         accumulated_loss = 0.0  # For logging purposes
 
         for i in pbar:
-            # Get a batch of data
+            # Get new sample
             x, y = next(self.dataset)
             x, y = x.to(self.device), y.to(self.device)
 

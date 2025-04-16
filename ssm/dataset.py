@@ -52,6 +52,16 @@ class CopyDataset(IterableDataset):
         return t[idx].clone()
 
     def generate_data(self):
+        """
+        Generate a dataset of input-output pairs.
+        The input is a sequence of tokens, and the output is a copy of the
+        input sequence with a specific token indicating the start of the copy.
+
+        :param int N: Number of samples to generate.
+        :return: Tuple of input and output tensors.
+        :rtype: tuple(torch.Tensor, torch.Tensor)
+        """
+        
         N = self.batch_size
         tokens = torch.randint(
             low=1,
