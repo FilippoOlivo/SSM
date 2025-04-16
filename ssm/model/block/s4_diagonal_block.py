@@ -120,7 +120,7 @@ class S4DBlock(S4BlockInterface):
         """
         tmp = self.A * self.dt.unsqueeze(-1)
         A_bar = torch.exp(tmp)
-        B_bar = (A_bar - 1) * self.B* self.dt.unsqueeze(-1) / (tmp + 1e-6)
+        B_bar = (A_bar - 1) * self.B * self.dt.unsqueeze(-1) / (tmp + 1e-6)
         return A_bar, B_bar
 
     @staticmethod
