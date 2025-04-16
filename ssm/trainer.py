@@ -46,7 +46,7 @@ class Trainer:
         """
         self.dataset = iter(dataset)
         n_classes = dataset.alphabet_size
-        self.model = EmbeddingBlock(model, n_classes)
+        self.model = EmbeddingBlock(model, n_classes, dataset.mem_tokens)
         self.steps = steps
         self.accumulation_steps = accumulation_steps
         self.test_steps = test_steps
@@ -76,11 +76,15 @@ class Trainer:
 
     def fit(self):
         """
-        Train the model
+        Train the model using gradient accumulation.
         """
         self.move_to_device()
         self.model.train()
         pbar = tqdm(range(self.steps), disable=not self.enable_progress_bar)
+
+        accumulation_counter = 0
+        accumulated_loss = 0.0  # For logging purposes
+
         for i in pbar:
             # Get a batch of data
             x, y = next(self.dataset)
@@ -88,20 +92,31 @@ class Trainer:
 
             # Forward pass and loss computation
             loss, accuracy = self.compute_metrics(self.model(x), y)
-            loss = loss / self.accumulation_steps
 
-            # Backward pass and optimization
-            self.optimizer.zero_grad()
+            loss = (
+                loss / self.accumulation_steps
+            )  # Scale the loss for accumulation
             loss.backward()
-            self.optimizer.step()
-            if i % self.accumulation_steps == 0:
+
+            # Accumulate loss and increment the counter
+            accumulated_loss += loss
+            accumulation_counter += 1
+
+            # Update the model parameters every accumulation_steps
+            if accumulation_counter % self.accumulation_steps == 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-
-            if int(i / self.accumulation_steps) % self.logging_steps == 0:
-                self.logging(
-                    pbar, int(i / self.accumulation_steps), loss, accuracy
-                )
+                # Log the metrics
+                if (
+                    accumulation_counter // self.accumulation_steps
+                ) % self.logging_steps == 0:
+                    self.logging(
+                        pbar,
+                        accumulation_counter // self.accumulation_steps,
+                        accumulated_loss,
+                        accuracy,
+                    )
+                accumulated_loss = 0.0
 
     def test(self):
         """

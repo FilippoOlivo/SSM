@@ -3,7 +3,7 @@ from torch.nn import Softmax
 
 
 class EmbeddingBlock(torch.nn.Module):
-    def __init__(self, model, embedding_dim):
+    def __init__(self, model, embedding_dim, mem_tokens):
         """
         Initialize the embedding block.
 
@@ -15,6 +15,7 @@ class EmbeddingBlock(torch.nn.Module):
             embedding_dim, model.input_dim, padding_idx=0
         )
         self.model = model
+        self.mem_tokens = mem_tokens
         self.softmax = Softmax(dim=-1)
 
     def forward(self, x):
@@ -27,4 +28,5 @@ class EmbeddingBlock(torch.nn.Module):
         """
         x = self.embedding(x)
         x = self.model(x)
+        x = x[:, -self.mem_tokens :, :]
         return self.softmax(x)
