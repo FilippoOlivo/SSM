@@ -15,7 +15,4 @@ model:
   discretization: "bilinear"
 
 trainer:
-    steps: 10
-    test_steps: 10
-    logging_steps: 2
     logging_dir: "logs/s4d_copy"
