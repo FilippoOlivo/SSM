@@ -1,0 +1,34 @@
+model:
+  model: ssm.model.Mamba
+  method: "convolutional"
+  input_dim: 16
+  model_dim: 64
+  output_dim: 16
+  n_layers: 2
+  initialization: "S4D-Real"
+  discretization: "bilinear"
+  expansion_factor: 2
+  kernel_size: 4
+  ssm_type: S6
+  normalization: True
+  dt: .001
+
+dataset:
+    sequence_len: 1024
+    batch_size: 32
+    alphabet_size: 16
+    mem_tokens: 16
+    marker: -1
+    selective: True
+
+trainer:
+    steps: 400000
+    test_steps: 10
+    logging_steps: 100
+    logging_dir: "logs/mamba_copy"
+    optimizer_class: torch.optim.AdamW
+    optimizer_params:
+        lr: 0.0001
+    accumulation_steps: 2
+
+  
