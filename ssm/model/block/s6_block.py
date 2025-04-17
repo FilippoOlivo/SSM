@@ -12,7 +12,7 @@ class DeltaNetwork(torch.nn.Module):
     input dimension.
     """
 
-    def __init__(self, input_dim, dt_min, dt_max, dt_init_floor):
+    def __init__(self, input_dim, dt_min, dt_max):
         """
         Initialization of the Delta Network.
 
@@ -26,12 +26,12 @@ class DeltaNetwork(torch.nn.Module):
         self.linear = torch.nn.Linear(input_dim, 1, bias=False)
         self.activation = torch.nn.Softplus()
 
-        dt = torch.exp(
-            torch.rand(self.input_dim) * (math.log(dt_max) - math.log(dt_min))
-            + math.log(dt_min)
-        ).clamp(min=dt_init_floor)
-
-        self.bias = torch.nn.Parameter(dt)
+        # Sampling dt from a uniform distribution
+        dt = torch.rand(input_dim) * (dt_max - dt_min) + dt_min
+        # Apply inverse softplus to dt
+        dt = torch.log(torch.exp(dt) - 1.0 + 1e-6)
+        # Make dt a parameter trainable!
+        self.dt = torch.nn.Parameter(dt)
 
     def forward(self, x):
         """
@@ -44,7 +44,7 @@ class DeltaNetwork(torch.nn.Module):
 
         x = self.linear(x)
         x = x.expand(-1, -1, self.input_dim)
-        return self.activation(x + self.bias)
+        return self.activation(x + self.dt)
 
 
 class S6Block(torch.nn.Module):
@@ -75,9 +75,8 @@ class S6Block(torch.nn.Module):
         self,
         input_dim,
         hid_dim,
-        dt_min=0.0001,
+        dt_min=0.001,
         dt_max=0.01,
-        dt_init_floor=1e-4,
         real_random=False,
         **kwargs,
     ):
@@ -88,8 +87,6 @@ class S6Block(torch.nn.Module):
         :param int hid_dim: The hidden dimension.
         :param float dt_min: The minimum time step. Default is `0.0001`.
         :param float dt_max: The maximum time step. Default is `0.01`.
-        :param float dt_init_floor: The minimum value for the time step.
-            Default is `1e-4`.
         :param bool real_random: If `True`, the real part of the A matrix is
             initialized at random between 0 and 1. Default is `False`.
         :param dict kwargs: Additional keyword arguments.
@@ -108,10 +105,7 @@ class S6Block(torch.nn.Module):
         self.linear_b = torch.nn.Linear(input_dim, hid_dim)
         self.linear_c = torch.nn.Linear(input_dim, hid_dim)
         self.delta_net = DeltaNetwork(
-            input_dim=input_dim,
-            dt_min=dt_min,
-            dt_max=dt_max,
-            dt_init_floor=dt_init_floor,
+            input_dim=input_dim, dt_min=dt_min, dt_max=dt_max
         )
 
     def _discretize(self, A, B, dt):
