@@ -1,6 +1,6 @@
 import math
 import torch
-from ...utils import compute_S4DReal
+from ...utils import compute_S4DReal, initialize_dt
 
 
 class DeltaNetwork(torch.nn.Module):
@@ -25,12 +25,15 @@ class DeltaNetwork(torch.nn.Module):
         self.linear = torch.nn.Linear(input_dim, 1, bias=False)
         self.activation = torch.nn.Softplus()
 
-        # Sampling dt from a uniform distribution
-        dt = torch.rand(input_dim) * (dt_max - dt_min) + dt_min
-        # Apply inverse softplus to dt
-        dt = torch.log(torch.exp(dt) - 1.0 + 1e-6)
-        # Make dt a parameter trainable!
-        self.dt = torch.nn.Parameter(dt)
+        # Initialize delta and make it trainable
+        self.dt = torch.nn.Parameter(
+            initialize_dt(
+                input_dim=input_dim,
+                dt_min=dt_min,
+                dt_max=dt_max,
+                inverse_softplus=True,
+            )
+        )
 
     def forward(self, x):
         """

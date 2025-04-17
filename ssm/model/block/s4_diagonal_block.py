@@ -5,6 +5,7 @@ from ...utils import (
     compute_S4DLin,
     compute_S4DQuad,
     compute_S4DReal,
+    initialize_dt,
 )
 
 
@@ -45,7 +46,8 @@ class S4DBlock(S4BlockInterface):
         input_dim,
         hid_dim,
         method,
-        dt=0.1,
+        dt_max=0.01,
+        dt_min=0.001,
         initialization="S4D-Inv",
         real_random=False,
         imag_random=False,
@@ -82,7 +84,13 @@ class S4DBlock(S4BlockInterface):
         B = torch.rand(input_dim, hid_dim)
         C = torch.rand(input_dim, hid_dim)
 
-        dt = torch.tensor(dt, dtype=torch.float32)
+        # dt = torch.tensor(dt, dtype=torch.float32)
+        dt = initialize_dt(
+            input_dim=input_dim,
+            dt_max=dt_max,
+            dt_min=dt_min,
+            inverse_softplus=False,
+        )
 
         super().__init__(
             input_dim=input_dim,
