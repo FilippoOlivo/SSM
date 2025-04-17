@@ -1,5 +1,6 @@
 import torch
 from .block import S6Block
+from .block.residual_block import ResidualBlock
 
 
 class S6(torch.nn.Module):
@@ -34,8 +35,10 @@ class S6(torch.nn.Module):
         hid_dim,
         output_dim,
         n_layers=2,
-        activation=torch.nn.ReLU,
+        activation=torch.nn.GELU,
         real_random=False,
+        residual=True,
+        layer_norm=True,
         **kwargs,
     ):
         """
@@ -50,6 +53,10 @@ class S6(torch.nn.Module):
         :param bool real_random: If `True`, the real part of the A matrix of the
             diagonal block is initialized at random between 0 and 1.
             Default is `False`.
+        :param bool residual: If `True`, a residual connection is added to the
+            output of each S6 block. Default is `True`.
+        :param bool layer_norm: If `True`, layer normalization is applied after
+            each S6 block. Default is `True`.
         :param dict kwargs: Additional keyword arguments used in the block.
         """
         super().__init__()
@@ -57,17 +64,19 @@ class S6(torch.nn.Module):
         # Initialize the layers
         layers = []
         for _ in range(n_layers):
-            layers.append(
+            tmp = torch.nn.Sequential(
                 S6Block(
                     input_dim=input_dim,
                     hid_dim=hid_dim,
                     real_random=real_random,
                     **kwargs,
-                )
+                ),
+                activation(),
+                torch.nn.Linear(input_dim, input_dim),
+                # Conditionally add layer normalization
+                *([torch.nn.LayerNorm(input_dim)] if layer_norm else []),
             )
-            layers.append(activation())
-            layers.append(torch.nn.Linear(input_dim, input_dim))
-            layers.append(torch.nn.LayerNorm(input_dim))
+            layers.append(tmp if not residual else ResidualBlock(tmp))
         self.layers = torch.nn.Sequential(*layers)
 
         # Initialize the decoder to match the output dimension

@@ -1,3 +1,4 @@
+import math
 import torch
 from ...utils import compute_S4DReal
 
@@ -11,22 +12,26 @@ class DeltaNetwork(torch.nn.Module):
     input dimension.
     """
 
-    def __init__(self, input_dim, dt):
+    def __init__(self, input_dim, dt_min, dt_max, dt_init_floor):
         """
         Initialization of the Delta Network.
 
         :param int input_dim: The input dimension.
-        :param float dt: The time step for discretization.
+        :param float dt_min: The minimum time step.
+        :param float dt_max: The maximum time step.
+        :param float dt_init_floor: The minimum value for the time step.
         """
         super().__init__()
-
-        # Initialize the parameters
-        self.dt = dt
         self.input_dim = input_dim
-
-        # Define the layers
+        self.linear = torch.nn.Linear(input_dim, 1, bias=False)
         self.activation = torch.nn.Softplus()
-        self.linear = torch.nn.Linear(input_dim, 1)
+
+        dt = torch.exp(
+            torch.rand(self.input_dim) * (math.log(dt_max) - math.log(dt_min))
+            + math.log(dt_min)
+        ).clamp(min=dt_init_floor)
+
+        self.bias = torch.nn.Parameter(dt)
 
     def forward(self, x):
         """
@@ -36,11 +41,13 @@ class DeltaNetwork(torch.nn.Module):
         :return: The output tensor.
         :rtype: torch.Tensor
         """
-        delta = self.activation(self.linear(x)) + self.dt
-        return delta.repeat(1, 1, self.input_dim)
+
+        x = self.linear(x)
+        x = x.expand(-1, -1, self.input_dim)
+        return self.activation(x + self.bias)
 
 
-class S6Block(torch.nn.Module):
+class S6Block(torch.torch.nn.Module):
     r"""
     Implementation of the S6 block.
 
@@ -49,7 +56,7 @@ class S6Block(torch.nn.Module):
     parts of the input sequence, making it suitable for tasks such as selective
     copy.
 
-    The output is computed in an efficient manner by leveraging the parallel
+    The output is computed in an efficient matorch.nner by leveraging the parallel
     scan algorithm.
 
     .. seealso::
@@ -68,7 +75,9 @@ class S6Block(torch.nn.Module):
         self,
         input_dim,
         hid_dim,
-        dt=0.1,
+        dt_min=0.0001,
+        dt_max=0.01,
+        dt_init_floor=1e-4,
         real_random=False,
         **kwargs,
     ):
@@ -77,7 +86,10 @@ class S6Block(torch.nn.Module):
 
         :param int input_dim: The input dimension.
         :param int hid_dim: The hidden dimension.
-        :param float dt: The time step for discretization. Default is `0.1`.
+        :param float dt_min: The minimum time step. Default is `0.0001`.
+        :param float dt_max: The maximum time step. Default is `0.01`.
+        :param float dt_init_floor: The minimum value for the time step.
+            Default is `1e-4`.
         :param bool real_random: If `True`, the real part of the A matrix is
             initialized at random between 0 and 1. Default is `False`.
         :param dict kwargs: Additional keyword arguments.
@@ -87,16 +99,20 @@ class S6Block(torch.nn.Module):
         # Initialize parameters
         self.input_dim = input_dim
         self.hid_dim = hid_dim
-        self.dt = dt
 
         # Initialize the matrix A
         A = compute_S4DReal(hid_dim, real_random=real_random).unsqueeze(0)
-        self.A = torch.nn.Parameter(A.repeat(input_dim, 1))
+        self.A = torch.torch.nn.Parameter(A.repeat(input_dim, 1))
 
         # Initialize the networks to compute matrices B and C
-        self.linear_b = torch.nn.Linear(input_dim, hid_dim)
-        self.linear_c = torch.nn.Linear(input_dim, hid_dim)
-        self.delta_net = DeltaNetwork(input_dim=input_dim, dt=dt)
+        self.linear_b = torch.torch.nn.Linear(input_dim, hid_dim)
+        self.linear_c = torch.torch.nn.Linear(input_dim, hid_dim)
+        self.delta_net = DeltaNetwork(
+            input_dim=input_dim,
+            dt_min=dt_min,
+            dt_max=dt_max,
+            dt_init_floor=dt_init_floor,
+        )
 
     def _discretize(self, A, B, dt):
         """
@@ -177,7 +193,7 @@ class S6Block(torch.nn.Module):
         a_star = torch.cumsum(log_a, dim=1)
 
         # Padding over the sequence length L
-        a_star = torch.nn.functional.pad(a_star, (0, 0, 0, 0, 1, 0))
+        a_star = torch.torch.nn.functional.pad(a_star, (0, 0, 0, 0, 1, 0))
 
         # Compute the logcumsumexp over the sequence length L
         tmp = torch.logcumsumexp(log_b - a_star[:, 1:], dim=1)
