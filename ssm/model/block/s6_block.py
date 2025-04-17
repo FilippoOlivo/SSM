@@ -19,7 +19,6 @@ class DeltaNetwork(torch.nn.Module):
         :param int input_dim: The input dimension.
         :param float dt_min: The minimum time step.
         :param float dt_max: The maximum time step.
-        :param float dt_init_floor: The minimum value for the time step.
         """
         super().__init__()
         self.input_dim = input_dim
