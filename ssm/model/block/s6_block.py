@@ -47,7 +47,7 @@ class DeltaNetwork(torch.nn.Module):
         return self.activation(x + self.bias)
 
 
-class S6Block(torch.torch.nn.Module):
+class S6Block(torch.nn.Module):
     r"""
     Implementation of the S6 block.
 
@@ -56,7 +56,7 @@ class S6Block(torch.torch.nn.Module):
     parts of the input sequence, making it suitable for tasks such as selective
     copy.
 
-    The output is computed in an efficient matorch.nner by leveraging the parallel
+    The output is computed in an efficient manner by leveraging the parallel
     scan algorithm.
 
     .. seealso::
@@ -102,11 +102,11 @@ class S6Block(torch.torch.nn.Module):
 
         # Initialize the matrix A
         A = compute_S4DReal(hid_dim, real_random=real_random).unsqueeze(0)
-        self.A = torch.torch.nn.Parameter(A.repeat(input_dim, 1))
+        self.A = torch.nn.Parameter(A.repeat(input_dim, 1))
 
         # Initialize the networks to compute matrices B and C
-        self.linear_b = torch.torch.nn.Linear(input_dim, hid_dim)
-        self.linear_c = torch.torch.nn.Linear(input_dim, hid_dim)
+        self.linear_b = torch.nn.Linear(input_dim, hid_dim)
+        self.linear_c = torch.nn.Linear(input_dim, hid_dim)
         self.delta_net = DeltaNetwork(
             input_dim=input_dim,
             dt_min=dt_min,
@@ -193,7 +193,7 @@ class S6Block(torch.torch.nn.Module):
         a_star = torch.cumsum(log_a, dim=1)
 
         # Padding over the sequence length L
-        a_star = torch.torch.nn.functional.pad(a_star, (0, 0, 0, 0, 1, 0))
+        a_star = torch.nn.functional.pad(a_star, (0, 0, 0, 0, 1, 0))
 
         # Compute the logcumsumexp over the sequence length L
         tmp = torch.logcumsumexp(log_b - a_star[:, 1:], dim=1)
