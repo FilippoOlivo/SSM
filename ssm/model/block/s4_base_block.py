@@ -157,6 +157,7 @@ class S4BaseBlock(S4BlockInterface):
         :return: The updated hidden state.
         :rtype: torch.Tensor
         """
+        self.dt = torch.clamp(self.dt, min=1e-4)
         # Compute Ah + Bx
         Ah = torch.matmul(h.unsqueeze(-2), A_bar).squeeze(-2)
         Bx = x[:, t, :].unsqueeze(-1) * B_bar
