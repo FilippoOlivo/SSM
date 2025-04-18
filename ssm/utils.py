@@ -137,14 +137,15 @@ def initialize_dt(input_dim, dt_min, dt_max, inverse_softplus=False):
     """
     Initialize the time step dt for the S4 and S6 blocks.
 
-    :param float dt_min: Minimum time step.
-    :param float dt_max: Maximum time step.
-    :return: Initialized time step dt tensor of shape (input_dim,)
+    :param float dt_min: The minimum time step for discretization.
+    :param float dt_max: The maximum time step for discretization.
+    :return: Initialized time step dt tensor of shape (input_dim,).
     :rtype: torch.Tensor
     """
-    # Sampling dt from a uniform distribution
+    # Sample dt from a uniform distribution on [dt_min, dt_max]
     dt = torch.rand(input_dim) * (dt_max - dt_min) + dt_min
-    # Apply inverse softplus to dt
-    if inverse_softplus:
-        dt = torch.log(torch.exp(dt) - 1.0 + 1e-6)
+
+    # Apply the inverse softplus to dt
+    dt = torch.log(torch.exp(dt) - 1.0 + 1e-6) if inverse_softplus else dt
+
     return dt

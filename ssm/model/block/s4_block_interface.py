@@ -76,7 +76,7 @@ class S4BlockInterface(torch.nn.Module, ABC):
             raise ValueError(f"Unknown method: {method}")
         self.method = method
 
-        # Initialize matrices A, B, and C
+        # Initialize matrices A, B, C and the time step dt
         self.A, self.B, self.C, self.dt = (
             torch.nn.Parameter(A),
             torch.nn.Parameter(B),

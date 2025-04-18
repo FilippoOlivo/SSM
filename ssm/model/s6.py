@@ -49,7 +49,7 @@ class S6(torch.nn.Module):
         :param int output_dim: The output dimension.
         :param int n_layers: Number of S6 blocks. Default is 2.
         :param torch.nn.Module activation: The activation function.
-            Default is `torch.nn.ReLU`.
+            Default is `torch.nn.GELU`.
         :param bool real_random: If `True`, the real part of the A matrix of the
             diagonal block is initialized at random between 0 and 1.
             Default is `False`.
@@ -61,6 +61,7 @@ class S6(torch.nn.Module):
         """
         super().__init__()
         self.input_dim = input_dim
+
         # Initialize the layers
         layers = []
         for _ in range(n_layers):
@@ -73,7 +74,6 @@ class S6(torch.nn.Module):
                 ),
                 activation(),
                 torch.nn.Linear(input_dim, input_dim),
-                # Conditionally add layer normalization
                 *([torch.nn.LayerNorm(input_dim)] if layer_norm else []),
             )
             layers.append(tmp if not residual else ResidualBlock(tmp))

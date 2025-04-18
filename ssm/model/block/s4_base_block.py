@@ -62,6 +62,8 @@ class S4BaseBlock(S4BlockInterface):
             A = torch.rand(input_dim, hid_dim, hid_dim)
         B = torch.rand(input_dim, hid_dim, 1)
         C = torch.rand(input_dim, 1, hid_dim)
+
+        # Initialize the time step dt
         dt = (
             initialize_dt(
                 input_dim=input_dim,
