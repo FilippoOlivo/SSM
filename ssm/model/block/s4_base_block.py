@@ -122,10 +122,11 @@ class S4BaseBlock(S4BlockInterface):
         Discretization of the continuous-time dynamics to obtain the matrices
         :math:`A_{bar}` and :math:`B_{bar}`.
         """
-        matrix_1 = self.I + 0.5 * self.A * self.dt
-        matrix_2 = (self.I - 0.5 * self.A * self.dt).inverse()
+        dt = torch.clamp(self.dt, min=1e-4)
+        matrix_1 = self.I + 0.5 * self.A * dt
+        matrix_2 = (self.I - 0.5 * self.A * dt).inverse()
         A_bar = matrix_2 @ matrix_1
-        B_bar = matrix_2 @ self.B * self.dt
+        B_bar = matrix_2 @ self.B * dt
         return A_bar, B_bar
 
     @staticmethod
@@ -157,7 +158,6 @@ class S4BaseBlock(S4BlockInterface):
         :return: The updated hidden state.
         :rtype: torch.Tensor
         """
-        self.dt = torch.clamp(self.dt, min=1e-4)
         # Compute Ah + Bx
         Ah = torch.matmul(h.unsqueeze(-2), A_bar).squeeze(-2)
         Bx = x[:, t, :].unsqueeze(-1) * B_bar
