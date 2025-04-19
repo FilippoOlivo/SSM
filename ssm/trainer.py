@@ -6,21 +6,165 @@ from torchmetrics import Accuracy
 from .model.block.embedding_block import EmbeddingBlock
 
 
+class Logger:
+    """
+    A simple logger class to handle logging messages.
+    """
+
+    def __init__(
+        self,
+        logging_steps,
+        logging_dir=None,
+        enable_progress_bar=True,
+        tensorboard_logger=True,
+    ):
+        """
+        Initialize the Logger class.
+        """
+        self.loss = []
+        self.accuracy = []
+        self.steps = 0
+        self.enable_progress_bar = enable_progress_bar
+        self.logging_steps = logging_steps
+        self.logging_dir = self.logging_folder(logging_dir)
+        os.makedirs(self.logging_dir, exist_ok=True)
+        self.writer = (
+            None if not tensorboard_logger else self.initialize_tensorboard()
+        )
+        self.pbar = None
+
+    def initialize_tensorboard(self):
+        from torch.utils.tensorboard import SummaryWriter
+
+        return SummaryWriter(log_dir=self.logging_dir)
+
+    def initialize(self):
+        """
+        Initialize the logger.
+        """
+        self.loss = []
+        self.accuracy = []
+
+    def step(self, loss, accuracy):
+        """
+        Log a step.
+        :param float loss: The loss value.
+        :param float accuracy: The accuracy value.
+        """
+        self.loss.append(loss)
+        self.accuracy.append(accuracy)
+        self.steps += 1
+        if self.steps % self.logging_steps == 0:
+            self.log_on_tensorboard(
+                "train/loss_accumulate",
+                sum(self.loss) / len(self.loss),
+                self.steps,
+            )
+            self.log_on_tensorboard(
+                "train/accuracy_accumulate",
+                sum(self.accuracy) / len(self.accuracy),
+                self.steps,
+            )
+            self.log_on_tensorboard("train/loss", self.loss[-1], self.steps)
+            self.log_on_tensorboard(
+                "train/accuracy", self.accuracy[-1], self.steps
+            )
+            self.writer.flush()
+            self.pbar.set_postfix(
+                loss=loss,
+                accuracy=accuracy,
+            )
+            self.initialize()
+
+    @staticmethod
+    def logging_folder(base_dir):
+        """
+        Determine the next available logging folder based on existing
+        directories in the specified base directory. The folder names are
+        expected to follow the format "version_X", where X is an integer
+        representing the version number.
+        :param str base_dir: The base directory where the logging folders are
+            located.
+        :return: The path to the next available logging folder.
+        :rtype: str
+        """
+        if base_dir is None:
+            warnings.warn(
+                "No logging directory provided. Using default directory."
+            )
+            base_dir = "logging_dir/default"
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+        idx = [
+            name.split("version_")[-1]
+            for name in os.listdir(base_dir)
+            if os.path.isdir(os.path.join(base_dir, name))
+            and name.startswith("version_")
+        ]
+        idx = [int(i) for i in idx]
+        if len(idx) == 0:
+            return os.path.join(base_dir, "version_0")
+        idx = max(idx) + 1
+        folder = os.path.join(base_dir, f"version_{idx}")
+        return folder
+
+    def write_model_summary(
+        self, trainable_parameters, non_trainable_parameters
+    ):
+        """
+        Write the model summary to TensorBoard.
+        :param torch.nn.Module model: The model to summarize.
+        """
+        if self.writer is not None:
+            self.writer.add_text(
+                "trainable_parameters", str(trainable_parameters), 0
+            )
+            self.writer.add_text(
+                "non_trainable_parameters", str(non_trainable_parameters), 0
+            )
+            self.writer.flush()
+
+    def log_on_tensorboard(self, name, value, step):
+        """
+        Write a scalar value to TensorBoard.
+        :param str name: The name of the scalar value.
+        :param float value: The value to write.
+        :param int step: The current step number.
+        """
+        if self.writer is not None:
+            self.writer.add_scalar(name, value, step)
+            self.writer.flush()
+
+    def initialize_pbar(self, steps):
+        """
+        Initialize the progress bar.
+        :param int steps: The total number of steps.
+        """
+        self.pbar = tqdm(range(steps), disable=not self.enable_progress_bar)
+
+    def save_model(self, model):
+        """
+        Save the model to a file.
+        :param torch.nn.Module model: The model to save.
+        :param str path: The path to save the model.
+        """
+        torch.save(
+            model.state_dict(), os.path.join(self.logging_dir, "model.pth")
+        )
+
+
 class Trainer:
     def __init__(
         self,
         model,
         dataset,
         steps,
+        logger,
         accumulation_steps=1,
-        logging_steps=0,
         device=None,
         test_steps=0,
         optimizer_class=torch.optim.Adam,
         optimizer_params={"lr": 1e-3},
-        enable_progress_bar=True,
-        tensorboard_logger=True,
-        logging_dir=None,
     ):
         """
         Initialize the Trainer class.
@@ -48,31 +192,15 @@ class Trainer:
         n_classes = dataset.alphabet_size
         self.model = EmbeddingBlock(model, n_classes, dataset.mem_tokens)
         self.steps = steps
+        self.logger = logger
         self.accumulation_steps = accumulation_steps
         self.test_steps = test_steps
-        self.logging_steps = logging_steps
         self.device = device if device else self.set_device()
         self.optimizer = optimizer_class(
             self.model.parameters(), **optimizer_params
         )
         self.loss = torch.nn.CrossEntropyLoss()
-        self.enable_progress_bar = enable_progress_bar
         self.accuracy = Accuracy(task="multiclass", num_classes=n_classes)
-        self.writer = None
-        if tensorboard_logger and logging_steps > 0:
-            from torch.utils.tensorboard import SummaryWriter
-
-            if logging_dir is None:
-                warnings.warn(
-                    "No logging directory provided. Using default directory."
-                )
-                logging_dir = "logging_dir/default"
-            if not os.path.exists(logging_dir):
-                os.makedirs(logging_dir)
-            logging_dir = self.logging_folder(logging_dir)
-            os.makedirs(logging_dir)
-            self.writer = SummaryWriter(log_dir=logging_dir)
-            self.logging = self.tensorboard_wrapper(self.logging)
         self.mem_tokens = dataset.mem_tokens
         self.model_summary()
 
@@ -82,12 +210,12 @@ class Trainer:
         """
         self.move_to_device()
         self.model.train()
-        pbar = tqdm(range(self.steps), disable=not self.enable_progress_bar)
+        self.logger.initialize_pbar(self.steps)
 
         accumulation_counter = 0
-        accumulated_loss = 0.0  # For logging purposes
+        accumulated_loss = 0.0
 
-        for i in pbar:
+        for i in self.logger.pbar:
             # Get new sample
             x, y = next(self.dataset)
             x, y = x.to(self.device), y.to(self.device)
@@ -109,16 +237,9 @@ class Trainer:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
                 # Log the metrics
-                if (
-                    accumulation_counter // self.accumulation_steps
-                ) % self.logging_steps == 0:
-                    self.logging(
-                        pbar,
-                        accumulation_counter // self.accumulation_steps,
-                        accumulated_loss,
-                        accuracy,
-                    )
+                self.logger.step(accumulated_loss.item(), accuracy.item())
                 accumulated_loss = 0.0
+        self.logger.save_model(self.model)
 
     def test(self):
         """
@@ -127,7 +248,7 @@ class Trainer:
         self.move_to_device()
         self.model.eval()
         pbar = tqdm(
-            range(self.test_steps), disable=not self.enable_progress_bar
+            range(self.test_steps), disable=not self.logger.enable_progress_bar
         )
         accuracy = 0
         loss = 0
@@ -144,13 +265,12 @@ class Trainer:
         print(f"Test Loss: {loss / self.test_steps}")
         print(f"Test Accuracy: {accuracy / self.test_steps}")
 
-        self.write_on_tensorboard(
+        self.logger.log_on_tensorboard(
             "test/loss", loss / self.test_steps, self.test_steps
         )
-        self.write_on_tensorboard(
+        self.logger.log_on_tensorboard(
             "test/accuracy", accuracy / self.test_steps, self.test_steps
         )
-        self.writer.close()
 
     def compute_metrics(self, output, y):
         """
@@ -187,72 +307,6 @@ class Trainer:
             return torch.device("mps")
         return torch.device("cpu")
 
-    @staticmethod
-    def logging_folder(base_dir):
-        """
-        Determine the next available logging folder based on existing
-        directories in the specified base directory. The folder names are
-        expected to follow the format "version_X", where X is an integer
-        representing the version number.
-        :param str base_dir: The base directory where the logging folders are
-            located.
-        :return: The path to the next available logging folder.
-        :rtype: str
-        """
-        idx = [
-            name.split("version_")[-1]
-            for name in os.listdir(base_dir)
-            if os.path.isdir(os.path.join(base_dir, name))
-            and name.startswith("version_")
-        ]
-        idx = [int(i) for i in idx]
-        if len(idx) == 0:
-            return os.path.join(base_dir, "version_0")
-        idx = max(idx) + 1
-        return os.path.join(base_dir, f"version_{idx}")
-
-    def logging(self, pbar, steps, loss, accuracy):
-        """
-        Log the training progress by updating the progress bar and writing
-        metrics to TensorBoard.
-        :param tqdm pbar: The progress bar object.
-        :param int steps: The current step number.
-        :param torch.Tensor loss: The current loss value.
-        :param torch.Tensor accuracy: The current accuracy value.
-        """
-        pbar.set_postfix(
-            loss=loss.item(),
-            accuracy=accuracy.item(),
-        )
-
-    def write_on_tensorboard(self, name, value, step):
-        """
-        Write a scalar value to TensorBoard.
-        :param str name: The name of the scalar value.
-        :param float value: The value to write.
-        :param int step: The current step number.
-        """
-        self.writer.add_scalar(name, value, step)
-
-    def tensorboard_wrapper(self, func):
-        """
-        Wrap the logging function to include TensorBoard logging.
-
-        :param function func: The original logging function which updates the
-            progress bar.
-        :return: The wrapped logging function used to log loss and accuracy
-            on TensorBoard.
-        :rtype: function
-        """
-
-        def wrapped(pbar, steps, loss, accuracy):
-            func(pbar, steps, loss, accuracy)
-            self.write_on_tensorboard("train/loss", loss.item(), steps)
-            self.write_on_tensorboard("train/accuracy", accuracy.item(), steps)
-            self.writer.flush()
-
-        return wrapped
-
     def _count_parameters(self):
         """
         Count the number of trainable and non-trainable parameters in the model.
@@ -279,11 +333,7 @@ class Trainer:
         num_params = self._count_parameters()
         print(f"Trainable parameters: {num_params['trainable']}")
         print(f"Non-trainable parameters: {num_params['non_trainable']}")
-        if self.writer is not None:
-            self.writer.add_text(
-                "trainable_parameters", str(num_params["trainable"]), 0
+        if self.logger is not None:
+            self.logger.write_model_summary(
+                num_params["trainable"], num_params["non_trainable"]
             )
-            self.writer.add_text(
-                "non_trainable_parameters", str(num_params["non_trainable"]), 0
-            )
-            self.writer.flush()
