@@ -36,7 +36,7 @@ class S4BaseBlock(S4BlockInterface):
         hid_dim,
         method,
         dt_min=0.001,
-        dt_max=0.01,
+        dt_max=0.1,
         hippo=False,
         **kwargs,
     ):

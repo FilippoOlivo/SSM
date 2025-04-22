@@ -3,8 +3,8 @@ import shutil
 import torch
 from ssm import Trainer
 from ssm.model import S4, S6, Mamba
-from ssm.dataset import CopyDataset
-from ssm.trainer import Logger
+from ssm import CopyDataset
+from ssm import Logger
 
 input_dim = 10
 hid_dim = 12

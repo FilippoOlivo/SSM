@@ -46,7 +46,7 @@ class S4DBlock(S4BlockInterface):
         input_dim,
         hid_dim,
         method,
-        dt_max=0.01,
+        dt_max=0.1,
         dt_min=0.001,
         initialization="S4D-Inv",
         real_random=False,

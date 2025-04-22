@@ -3,7 +3,8 @@ import importlib
 import argparse
 from copy import deepcopy
 from .dataset import CopyDataset
-from .trainer import Trainer, Logger
+from .trainer import Trainer
+from .logger import Logger
 
 
 class TrainingCLI:
