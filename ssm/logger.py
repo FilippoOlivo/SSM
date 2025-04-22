@@ -1,6 +1,7 @@
 import os
 import torch
 from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
 
 
 class Logger:
@@ -43,8 +44,6 @@ class Logger:
         :return: A TensorBoard writer instance.
         :rtype: torch.utils.tensorboard.SummaryWriter
         """
-        from torch.utils.tensorboard import SummaryWriter
-
         return SummaryWriter(log_dir=self.logging_dir)
 
     def initialize(self):
