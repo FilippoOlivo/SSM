@@ -1,11 +1,5 @@
 model:
   model: ssm.model.S6
-  n_layers: 2
-  dt_min: 0.001
-  dt_max: 0.1
-  model_dim: 64
-  hid_dim: 16
-  n_layers: 2
   residual: True
   random_real: True
 

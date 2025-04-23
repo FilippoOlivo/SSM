@@ -18,6 +18,7 @@ class Trainer:
         test_steps=0,
         optimizer_class=torch.optim.Adam,
         optimizer_params={"lr": 1e-3},
+        model_summary=True,
     ):
         """
         Initialize the Trainer class.
@@ -191,3 +192,4 @@ class Trainer:
             self.metric_tracker.write_model_summary(
                 num_params["trainable"], num_params["non_trainable"]
             )
+        print(self.model)

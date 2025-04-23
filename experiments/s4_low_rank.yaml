@@ -4,13 +4,8 @@ model:
   method: "convolutional"
   activation: torch.nn.GELU
   hippo: True
-  dt_max: 0.1
-  dt_min: 0.001
   residual: True
   layer_norm: True
-  hid_dim: 16
-  model_dim: 64
-  n_layers: 2
 
 metric_tracker:
   experiment: "s4_low_rank"

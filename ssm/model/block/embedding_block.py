@@ -30,7 +30,6 @@ class EmbeddingBlock(torch.nn.Module):
         :rtype: torch.Tensor
         """
         x = self.embedding(x)
-        x = self.model(x)
-        x = x[:, -self.mem_tokens :, :]
+        x = self.model(x)[:, -self.mem_tokens :, :]
         x = self.project(x)
         return self.softmax(x)
