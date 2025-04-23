@@ -45,16 +45,7 @@ class MambaBlock(torch.nn.Module):
         super().__init__()
 
         mamba_dim = input_dim * expansion_factor
-
         kwargs["input_dim"] = mamba_dim
-        # if "hid_dim" in kwargs:
-        #     warnings.warn(
-        #         "hidden_dim is determined by the input_net, ignoring "
-        #         "kwargs['hid_dim']"
-        #     )
-        #     kwargs.pop("hid_dim")
-        # kwargs["hid_dim"] = expansion_factor * input_dim
-
         self.input_net = torch.nn.Linear(input_dim, mamba_dim * 2)
         self.output_net = torch.nn.Linear(mamba_dim, input_dim)
         self.ssm = self._initialize_ssm_block(ssm_type, **kwargs)

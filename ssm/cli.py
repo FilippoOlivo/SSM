@@ -1,3 +1,4 @@
+import os
 import yaml
 import importlib
 import argparse
@@ -27,9 +28,6 @@ class TrainingCLI:
         :param str config_file: Path to the configuration file.
 
         """
-        import torch
-
-        torch.autograd.set_detect_anomaly(True)
         self.args = self.argparsing()[0]
         if config_file is None:
             config_file = self.args.config_file
@@ -50,7 +48,6 @@ class TrainingCLI:
         :return: Configuration dictionary.
         :rtype: dict
         """
-        import os
 
         path = "/".join(config_file.split("/")[:-1]) + "/common.yaml"
         if os.path.exists(path):

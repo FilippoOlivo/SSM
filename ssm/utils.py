@@ -1,3 +1,4 @@
+import math
 import torch
 
 
@@ -142,7 +143,6 @@ def initialize_dt(input_dim, dt_min, dt_max, inverse_softplus=False):
     :return: Initialized time step dt tensor of shape (input_dim,).
     :rtype: torch.Tensor
     """
-    import math
 
     # Sample dt from a uniform distribution on [dt_min, dt_max]
     dt = torch.exp(
