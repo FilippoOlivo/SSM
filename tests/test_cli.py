@@ -28,8 +28,8 @@ def test_model():
     cli = TrainingCLI("tests/experiments_test/cli_test.yaml")
     model = cli.trainer.model.model
 
-    assert model.layers[0].model[0].hid_dim == 16
-    assert model.layers[0].model[0].method == "convolutional"
+    assert model.layers[0].model[1].hid_dim == 16
+    assert model.layers[0].model[1].method == "convolutional"
 
     shutil.rmtree("tests/logs/testing_logs")
 

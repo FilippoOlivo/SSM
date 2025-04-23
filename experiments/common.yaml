@@ -1,8 +1,8 @@
 dataset:
     sequence_len: 64
     batch_size: 64
-    vocab_size: 10
-    mem_tokens: 10
+    vocab_size: 16
+    mem_tokens: 16
     selective: False
 
 trainer:
@@ -16,7 +16,7 @@ metric_tracker:
     logging_steps: 100
     enable_progress_bar: False
     patience: 100
-    repo: "logs/"
+    repo: "/mnt/disk1/folivo/ssm/"
 
 model:
     n_layers: 2

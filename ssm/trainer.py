@@ -18,6 +18,8 @@ class Trainer:
         test_steps=0,
         optimizer_class=torch.optim.Adam,
         optimizer_params={"lr": 1e-3},
+        scheduler_class=None,
+        scheduler_params=None,
         model_summary=True,
     ):
         """
@@ -33,8 +35,11 @@ class Trainer:
         :param int test_steps: The number of test steps.
         :param torch.optim.Optimizer optimizer_class: The optimizer class to use.
         :param dict optimizer_params: The parameters for the optimizer.
-        :param int patience: The number of epochs with no improvement after
-            which training will be stopped. Default is 0 (disabled).
+        :param torch.optim.lr_scheduler._LRScheduler scheduler_class: The
+            learning rate scheduler class to use.
+        :param dict scheduler_params: The parameters for the learning rate
+            scheduler.
+        :param bool model_summary: Whether to print the model summary.
         """
         self.dataset = iter(dataset)
         n_classes = dataset.vocab_size
@@ -46,6 +51,11 @@ class Trainer:
         self.device = device if device else self.set_device()
         self.optimizer = optimizer_class(
             self.model.parameters(), **optimizer_params
+        )
+        self.scheduler = (
+            None
+            if scheduler_class is None
+            else scheduler_class(self.optimizer, **scheduler_params)
         )
         self.loss = torch.nn.CrossEntropyLoss()
         self.accuracy = Accuracy(task="multiclass", num_classes=n_classes)
@@ -91,6 +101,8 @@ class Trainer:
                 accumulated_loss = 0.0
                 if self.metric_tracker.stop_training:
                     break
+                if self.scheduler is not None:
+                    self.scheduler.step()
 
         self.metric_tracker.save_model(self.model)
 

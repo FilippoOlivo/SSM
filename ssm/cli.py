@@ -122,6 +122,12 @@ class TrainingCLI:
             module = importlib.import_module(module_name)
             optimizer_class = getattr(module, class_name)
             trainer_config["optimizer_class"] = optimizer_class
+        if "scheduler_class" in trainer_config:
+            optimizer_class = trainer_config.pop("scheduler_class")
+            module_name, class_name = optimizer_class.rsplit(".", 1)
+            module = importlib.import_module(module_name)
+            optimizer_class = getattr(module, class_name)
+            trainer_config["scheduler_class"] = optimizer_class
         return Trainer(**trainer_config)
 
     @staticmethod

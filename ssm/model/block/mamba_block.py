@@ -61,7 +61,6 @@ class MambaBlock(torch.nn.Module):
             self.norm = torch.nn.LayerNorm(mamba_dim)
         else:
             self.norm = None
-        self.D = torch.nn.Parameter(torch.randn(1, 1, model_dim))
 
     def forward(self, x):
         """
@@ -79,7 +78,7 @@ class MambaBlock(torch.nn.Module):
         if self.norm is not None:
             x = self.norm(x)
         x = self.output_net(x)
-        return x + self.D * x
+        return x
 
     def _initialize_ssm_block(self, ssm_type, **kwargs):
         """
