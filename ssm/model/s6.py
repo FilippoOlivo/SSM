@@ -36,7 +36,7 @@ class S6(torch.nn.Module):
         hid_dim,
         output_dim,
         n_layers=2,
-        activation=torch.nn.Identity,
+        activation=torch.nn.GELU,
         real_random=False,
         residual=True,
         layer_norm=True,

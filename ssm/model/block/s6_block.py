@@ -204,25 +204,3 @@ class S6Block(torch.nn.Module):
         tmp = torch.logcumsumexp(log_b - a_star[:, 1:], dim=1)
 
         return torch.exp(a_star[:, 1:] + tmp).real
-
-    # @staticmethod
-    # def _parallel_scan(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
-    #     """
-    #     Serial (sequential) scan for h_t = a_t * h_{t-1} + b_t.
-
-    #     Args:
-    #         a: [B, L, D, H] - multiplicative factors
-    #         b: [B, L, D, H] - additive terms
-
-    #     Returns:
-    #         h: [B, L, D, H] - output recurrence result
-    #     """
-    #     B, L, D, H = a.shape
-    #     h = torch.zeros(B, D, H, device=a.device, dtype=a.dtype)
-    #     output = []
-
-    #     for t in range(L):
-    #         h = a[:, t] * h + b[:, t]
-    #         output.append(h)
-
-    #     return torch.stack(output, dim=1)  # [B, L, D, H]
