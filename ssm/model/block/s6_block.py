@@ -82,7 +82,7 @@ class S6Block(torch.nn.Module):
         dt_min=0.001,
         dt_max=0.1,
         real_random=False,
-        dt_rank=4,
+        dt_rank=None,
         **kwargs,
     ):
         """
@@ -104,6 +104,7 @@ class S6Block(torch.nn.Module):
         # Initialize parameters
         self.input_dim = input_dim
         self.hid_dim = hid_dim
+        dt_rank = dt_rank if dt_rank is not None else max(hid_dim // 16, 1)
 
         # Initialize the matrix A
         A = compute_S4DReal(hid_dim, real_random=real_random).unsqueeze(0)
@@ -112,8 +113,8 @@ class S6Block(torch.nn.Module):
         )
 
         # Initialize the networks to compute matrices B and C
-        self.linear_b = torch.nn.Linear(input_dim, hid_dim)
-        self.linear_c = torch.nn.Linear(input_dim, hid_dim)
+        self.linear = torch.nn.Linear(input_dim, hid_dim * 2)
+
         self.delta_net = DeltaNetwork(
             input_dim=input_dim, dt_min=dt_min, dt_max=dt_max, dt_rank=dt_rank
         )
@@ -145,12 +146,11 @@ class S6Block(torch.nn.Module):
         :rtype: torch.Tensor
         """
         # Compute matrices B and C
-        B = self.linear_b(x)
-        C = self.linear_c(x)
+        B, C = self.linear(x).chunk(2, dim=-1)
 
         # Compute dt
         dt = self.delta_net(x)
-
+        # print(torch.mean(dt), torch.std(dt))
         # Discretize A and B
         A_bar, B_bar = self._discretize(self.A, B, dt)
 
@@ -204,3 +204,25 @@ class S6Block(torch.nn.Module):
         tmp = torch.logcumsumexp(log_b - a_star[:, 1:], dim=1)
 
         return torch.exp(a_star[:, 1:] + tmp).real
+
+    # @staticmethod
+    # def _parallel_scan(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+    #     """
+    #     Serial (sequential) scan for h_t = a_t * h_{t-1} + b_t.
+
+    #     Args:
+    #         a: [B, L, D, H] - multiplicative factors
+    #         b: [B, L, D, H] - additive terms
+
+    #     Returns:
+    #         h: [B, L, D, H] - output recurrence result
+    #     """
+    #     B, L, D, H = a.shape
+    #     h = torch.zeros(B, D, H, device=a.device, dtype=a.dtype)
+    #     output = []
+
+    #     for t in range(L):
+    #         h = a[:, t] * h + b[:, t]
+    #         output.append(h)
+
+    #     return torch.stack(output, dim=1)  # [B, L, D, H]
