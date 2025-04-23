@@ -1,8 +1,8 @@
 dataset:
     sequence_len: 256
     batch_size: 64
-    alphabet_size: 12
-    mem_tokens: 10
+    alphabet_size: 8
+    mem_tokens: 8
     selective: False
 
 trainer:
@@ -14,6 +14,6 @@ trainer:
 
 metric_tracker:
     logging_steps: 100
-    enable_progress_bar: True
+    enable_progress_bar: False
     patience: 40
     repo: "/mnt/disk1/folivo/ssm"
