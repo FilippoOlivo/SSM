@@ -10,9 +10,8 @@ model:
   dt_max: 0.1
   residual: True
   layer_norm: True
-  input_dim: 8
   hid_dim: 64
-  output_dim: 8
+  model_dim: 64
   n_layers: 2
 
 metric_tracker:

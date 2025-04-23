@@ -6,6 +6,7 @@ from copy import deepcopy
 from .dataset import CopyDataset
 from .trainer import Trainer
 from .metric_tracker import MetricTracker
+from .model.block.embedding_block import EmbeddingBlock
 
 
 class TrainingCLI:
@@ -32,8 +33,10 @@ class TrainingCLI:
         if config_file is None:
             config_file = self.args.config_file
         config = self.load_config(config_file)
-        model = self.init_model(deepcopy(config["model"]))
         dataset = CopyDataset(**deepcopy(config["dataset"]))
+        model = self.init_model(
+            deepcopy(config["model"]), dataset.vocab_size, dataset.mem_tokens
+        )
         metric_tracker = MetricTracker(**deepcopy(config["metric_tracker"]))
         trainer_config = deepcopy(config["trainer"])
         trainer_config["dataset"] = dataset
@@ -48,7 +51,6 @@ class TrainingCLI:
         :return: Configuration dictionary.
         :rtype: dict
         """
-
         path = "/".join(config_file.split("/")[:-1]) + "/common.yaml"
         if os.path.exists(path):
             with open(path, "r") as f:
@@ -76,7 +78,7 @@ class TrainingCLI:
         return config
 
     @staticmethod
-    def init_model(model_config):
+    def init_model(model_config, n_classes, mem_tokens):
         """
         Load the model from the configuration.
         :param dict model_config: Model configuration dictionary.
@@ -90,7 +92,16 @@ class TrainingCLI:
                 module_name, class_name = v.rsplit(".", 1)
                 module = importlib.import_module(module_name)
                 model_config[k] = getattr(module, class_name)
-        return model_config.pop("model")(**model_config)
+        if not "output_dim" in model_config:
+            model_config["output_dim"] = n_classes
+        model_class = model_config.pop("model")
+        model = model_class(**model_config)
+        return EmbeddingBlock(
+            model=model,
+            vocab_size=n_classes,
+            model_dim=model_config["model_dim"],
+            mem_tokens=mem_tokens,
+        )
 
     @staticmethod
     def init_trainer(trainer_config, model, dataset):

@@ -3,7 +3,6 @@ model:
   block_type: "S4D"
   method: "convolutional"
   activation: torch.nn.SiLU
-  input_dim: 5
   hid_dim: 16
   model_dim: 16
   output_dim: 10
@@ -16,7 +15,7 @@ model:
 dataset:
   sequence_len: 50
   batch_size: 16
-  alphabet_size: 10
+  vocab_size: 10
   mem_tokens: 10
   selective: False
 

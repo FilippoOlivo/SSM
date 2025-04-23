@@ -36,8 +36,8 @@ class Trainer:
             which training will be stopped. Default is 0 (disabled).
         """
         self.dataset = iter(dataset)
-        n_classes = dataset.alphabet_size
-        self.model = EmbeddingBlock(model, n_classes, dataset.mem_tokens)
+        n_classes = dataset.vocab_size
+        self.model = model
         self.steps = steps
         self.metric_tracker = metric_tracker
         self.accumulation_steps = accumulation_steps

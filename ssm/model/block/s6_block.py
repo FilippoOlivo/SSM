@@ -12,28 +12,28 @@ class DeltaNetwork(torch.nn.Module):
     input dimension.
     """
 
-    def __init__(self, input_dim, dt_min, dt_max, dt_rank, dt_scale=1.0):
+    def __init__(self, model_dim, dt_min, dt_max, dt_rank, dt_scale=1.0):
         """
         Initialization of the Delta Network.
 
-        :param int input_dim: The input dimension.
+        :param int model_dim: The input dimension.
         :param float dt_min: The minimum time step for discretization.
         :param float dt_max: The maximum time step for discretization.
         """
         super().__init__()
-        self.input_dim = input_dim
-        self.linear = torch.nn.Linear(input_dim, dt_rank, bias=True)
+        self.model_dim = model_dim
+        self.linear = torch.nn.Linear(model_dim, dt_rank, bias=True)
         self.activation = torch.nn.Softplus()
 
         # Initialize the time step dt
         dt = initialize_dt(
-            input_dim=input_dim,
+            dim=model_dim,
             dt_min=dt_min,
             dt_max=dt_max,
             inverse_softplus=True,
         )
 
-        self.project = torch.nn.Linear(dt_rank, input_dim, bias=True)
+        self.project = torch.nn.Linear(dt_rank, model_dim, bias=True)
         dt_init_std = dt_rank**-0.5 * dt_scale
         torch.nn.init.uniform_(self.project.weight, -dt_init_std, dt_init_std)
         with torch.no_grad():
@@ -77,7 +77,7 @@ class S6Block(torch.nn.Module):
 
     def __init__(
         self,
-        input_dim,
+        model_dim,
         hid_dim,
         dt_min=0.001,
         dt_max=0.1,
@@ -88,7 +88,7 @@ class S6Block(torch.nn.Module):
         """
         Initialization of the S6 block.
 
-        :param int input_dim: The input dimension.
+        :param int model_dim: The input dimension.
         :param int hid_dim: The hidden dimension.
         :param float dt_min: The minimum time step for discretization.
             Default is `0.001`.
@@ -102,23 +102,23 @@ class S6Block(torch.nn.Module):
         super().__init__()
 
         # Initialize parameters
-        self.input_dim = input_dim
+        self.model_dim = model_dim
         self.hid_dim = hid_dim
         dt_rank = dt_rank if dt_rank is not None else max(hid_dim // 16, 1)
 
         # Initialize the matrix A
         A = compute_S4DReal(hid_dim, real_random=real_random).unsqueeze(0)
         self.A = torch.nn.Parameter(
-            A.repeat(input_dim, 1).unsqueeze(0).unsqueeze(0)
+            A.repeat(model_dim, 1).unsqueeze(0).unsqueeze(0)
         )
 
         # Initialize the networks to compute matrices B and C
-        self.linear = torch.nn.Linear(input_dim, hid_dim * 2)
+        self.linear = torch.nn.Linear(model_dim, hid_dim * 2)
 
         self.delta_net = DeltaNetwork(
-            input_dim=input_dim, dt_min=dt_min, dt_max=dt_max, dt_rank=dt_rank
+            model_dim=model_dim, dt_min=dt_min, dt_max=dt_max, dt_rank=dt_rank
         )
-        self.D = torch.nn.Parameter(torch.ones(input_dim))
+        self.D = torch.nn.Parameter(torch.ones(model_dim))
 
     def _discretize(self, A, B, dt):
         """
