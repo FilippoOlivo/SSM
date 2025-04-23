@@ -150,7 +150,7 @@ class S6Block(torch.nn.Module):
 
         # Compute dt
         dt = self.delta_net(x)
-        # print(torch.mean(dt), torch.std(dt))
+
         # Discretize A and B
         A_bar, B_bar = self._discretize(self.A, B, dt)
 
