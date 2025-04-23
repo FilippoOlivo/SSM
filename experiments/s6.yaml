@@ -1,17 +1,20 @@
 model:
   model: ssm.model.S6
-  input_dim: 16
-  hid_dim: 64
-  output_dim: 16
   n_layers: 2
-  activation: torch.nn.SiLU
-    
+  dt_min: 0.001
+  dt_max: 0.1
+  input_dim: 12
+  hid_dim: 64
+  output_dim: 12
+  n_layers: 2
+  residual: False
   
 trainer:
-    optimizer_params:
-        lr: 0.001
-logger:
-  logging_dir: "logs/s6"
+  optimizer_params:
+    lr: 0.0001
+
+metric_tracker:
+  experiment: "s6"
 
 
   
