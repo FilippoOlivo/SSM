@@ -46,6 +46,7 @@ class Trainer:
         self.model = model
         self.steps = steps
         self.metric_tracker = metric_tracker
+        self.metric_tracker.add_model(model)
         self.accumulation_steps = accumulation_steps
         self.test_steps = test_steps
         self.device = device if device else self.set_device()
@@ -137,7 +138,6 @@ class Trainer:
         self.metric_tracker.log_on_tensorboard(
             "test/accuracy", accuracy / self.test_steps, self.test_steps
         )
-        self.metric_tracker.writer.close()
 
     def compute_metrics(self, output, y):
         """
@@ -200,8 +200,8 @@ class Trainer:
         num_params = self._count_parameters()
         print(f"Trainable parameters: {num_params['trainable']}")
         print(f"Non-trainable parameters: {num_params['non_trainable']}")
-        if self.metric_tracker is not None:
-            self.metric_tracker.write_model_summary(
-                num_params["trainable"], num_params["non_trainable"]
-            )
-        print(self.model)
+        model_summary = str(self.model)
+        print(model_summary)
+        self.metric_tracker.write_model_summary(
+            num_params["trainable"], num_params["non_trainable"], model_summary
+        )

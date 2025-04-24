@@ -29,19 +29,28 @@ class TrainingCLI:
         :param str config_file: Path to the configuration file.
 
         """
+        # Parse command line arguments
         self.args = self.argparsing()[0]
+        # If no config file is provided, use the one from command line
         if config_file is None:
             config_file = self.args.config_file
+
+        # Load the configuration file
         config = self.load_config(config_file)
+        # Initialize the dataset
         dataset = CopyDataset(**deepcopy(config["dataset"]))
+        # Initialize dataset
         model = self.init_model(
             deepcopy(config["model"]), dataset.vocab_size, dataset.mem_tokens
         )
+        # Initialize the metric tracker (logger + early stopping)
         metric_tracker = MetricTracker(**deepcopy(config["metric_tracker"]))
+        # Set up trainer
         trainer_config = deepcopy(config["trainer"])
         trainer_config["dataset"] = dataset
         trainer_config["metric_tracker"] = metric_tracker
         self.trainer = self.init_trainer(trainer_config, model, dataset)
+        # Write configuration on TensorBoard (if applicable)
         self.write_on_tensorboard(config)
 
     def load_config(self, config_file):
@@ -186,10 +195,11 @@ class TrainingCLI:
         Write the configuration on TensorBoard.
         :param dict config: Configuration dictionary.
         """
-        if hasattr(self.trainer, "writer"):
+        if self.trainer.metric_tracker.writer is not None:
+            writer = self.trainer.metric_tracker.writer
             config_str = yaml.dump(config)
-            self.trainer.writer.add_text("config", config_str, global_step=0)
-            self.trainer.writer.flush()
+            writer.add_text("config", config_str, global_step=0)
+            writer.flush()
 
     def initialize_logger(self, config):
         """

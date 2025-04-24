@@ -104,7 +104,7 @@ class S6Block(torch.nn.Module):
         # Initialize parameters
         self.model_dim = model_dim
         self.hid_dim = hid_dim
-        dt_rank = dt_rank if dt_rank is not None else max(hid_dim // 16, 1)
+        dt_rank = dt_rank if dt_rank is not None else max(model_dim // 16, 1)
 
         # Initialize the matrix A
         A = compute_S4DReal(hid_dim, real_random=real_random).unsqueeze(0)

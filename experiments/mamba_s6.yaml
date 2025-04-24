@@ -4,12 +4,7 @@ model:
   kernel_size: 4
   normalization: True
   ssm_type: "S6"
-  dt_min: 0.001
-  dt_max: 0.1
-  
-
 
 metric_tracker:
     experiment: "mamba_s6"
-
   
