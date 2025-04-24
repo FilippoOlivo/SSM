@@ -19,7 +19,6 @@ class EmbeddingBlock(torch.nn.Module):
             out_dim = vocab_size
         self.mem_tokens = mem_tokens
         self.project = torch.nn.Linear(model_dim, out_dim, bias=False)
-        self.softmax = Softmax(dim=-1)
 
     def forward(self, x):
         """
@@ -31,5 +30,4 @@ class EmbeddingBlock(torch.nn.Module):
         """
         x = self.embedding(x)
         x = self.model(x)[:, -self.mem_tokens :, :]
-        x = self.project(x)
-        return self.softmax(x)
+        return self.project(x)

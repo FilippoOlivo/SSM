@@ -169,6 +169,20 @@ class MetricTracker:
             model.state_dict(), os.path.join(self.logging_dir, "best_model.pth")
         )
 
+    def load_model(self):
+        """
+        Load the model from a file.
+        :param torch.nn.Module model: The model to load.
+        :param str path: The path to load the model.
+        """
+        model_path = os.path.join(self.logging_dir, "best_model.pth")
+        if os.path.exists(model_path):
+            self.model.to("cpu")
+            self.model.load_state_dict(
+                torch.load(model_path, map_location="cpu")
+            )
+        return self.model
+
     @property
     def stop_training(self):
         """

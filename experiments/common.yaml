@@ -7,6 +7,7 @@ dataset:
 
 trainer:
     steps: 400000
+    test_steps: 100
     optimizer_class: torch.optim.AdamW
     optimizer_params:
         lr: 0.0001

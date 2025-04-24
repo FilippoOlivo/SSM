@@ -8,7 +8,6 @@ model:
   random_real: False
   residual: True
   layer_norm: True
-  hid_dim: 32
 
 metric_tracker:
     experiment: "s4d_real"

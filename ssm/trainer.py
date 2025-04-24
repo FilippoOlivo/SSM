@@ -111,6 +111,7 @@ class Trainer:
         """
         Test the model
         """
+        self.model = self.metric_tracker.load_model()
         self.move_to_device()
         self.model.eval()
         pbar = tqdm(

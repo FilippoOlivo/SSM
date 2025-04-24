@@ -86,7 +86,8 @@ class S4BaseBlock(S4BlockInterface):
         )
 
         self.register_buffer(
-            "I", torch.eye(hid_dim).unsqueeze(0).expand(model_dim, -1, -1)
+            "I",
+            torch.eye(hid_dim).unsqueeze(0).expand(model_dim, -1, -1).clone(),
         )
 
     def _compute_K(self, L):
