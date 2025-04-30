@@ -8,3 +8,9 @@
 
 source ~/.bashrc
 conda activate ssm
+
+echo experiments/s6.yaml
+
+export CUDA_VISIBLE_DEVICES=1
+
+echo python scripts/run.py --config_file experiments/s6.yaml --fit True --test True
