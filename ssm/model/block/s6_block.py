@@ -98,6 +98,8 @@ class S6Block(torch.nn.Module):
         :param bool real_random: If `True`, the real part of the A matrix is
             initialized at random between 0 and 1. Default is `False`.
         :param int dt_rank: The rank of the time step. Default is `1`.
+        :param str scan_type: The type of scan to use. Can be either
+            "sequential" or "parallel". Default is "parallel".
         :param dict kwargs: Additional keyword arguments.
         """
         super().__init__()
