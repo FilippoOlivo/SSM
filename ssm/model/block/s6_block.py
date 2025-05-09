@@ -175,9 +175,9 @@ class S6Block(torch.nn.Module):
         """
         Sequential scan of the input tensor using the given matrices A and B.
 
-        :param torch.Tensor A: The hidden-to-hidden matrix.
-        :param torch.Tensor B: The input-to-hidden matrix.
-        :return: The output tensor after sequential scan.
+        :param torch.Tensor A: A tensor of shape (B, L, D, N).
+        :param torch.Tensor B: Another tensor of shape (B, L, D, N).
+        :return: The output tensor after sequential scan, of shape (B, L, D, N).
         :rtype: torch.Tensor
         """
         B_, L, D, N = A.shape

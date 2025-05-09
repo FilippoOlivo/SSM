@@ -8,7 +8,7 @@ hid_dim = 10
 
 @pytest.mark.parametrize("residual", [True, False])
 @pytest.mark.parametrize("layer_norm", [True, False])
-@pytest.mark.parametrize("scan_type", ['parallel', 'sequential'])
+@pytest.mark.parametrize("scan_type", ["parallel", "sequential"])
 def test_s6_constructor(residual, layer_norm, scan_type):
 
     model = S6(
@@ -24,7 +24,7 @@ def test_s6_constructor(residual, layer_norm, scan_type):
 
 @pytest.mark.parametrize("residual", [True, False])
 @pytest.mark.parametrize("layer_norm", [True, False])
-@pytest.mark.parametrize("scan_type", ['parallel', 'sequential'])
+@pytest.mark.parametrize("scan_type", ["parallel", "sequential"])
 def test_s6_forward(residual, layer_norm, scan_type):
 
     model = S6(
@@ -43,7 +43,7 @@ def test_s6_forward(residual, layer_norm, scan_type):
 
 @pytest.mark.parametrize("residual", [True, False])
 @pytest.mark.parametrize("layer_norm", [True, False])
-@pytest.mark.parametrize("scan_type", ['parallel', 'sequential'])
+@pytest.mark.parametrize("scan_type", ["parallel", "sequential"])
 def test_s6_backward(residual, layer_norm, scan_type):
 
     model = S6(
