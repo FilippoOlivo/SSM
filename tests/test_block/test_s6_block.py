@@ -1,11 +1,12 @@
+import pytest
 import torch
 from ssm.model.block import S6Block
 
 x = torch.rand(20, 25, 5)
 hid_dim = 10
 
-
-def test_s6_block_constructor():
+@pytest.mark.parametrize("scan_type", ["parallel", "sequential"])
+def test_s6_block_constructor(scan_type):
 
     model = S6Block(model_dim=x.shape[2], hid_dim=hid_dim)
 
