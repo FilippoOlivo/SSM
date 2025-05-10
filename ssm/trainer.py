@@ -83,33 +83,31 @@ class Trainer:
 
         accumulation_counter = 0
         accumulated_loss = 0.0
+        accumulated_accuracy = 0.0
 
         for i in self.metric_tracker.pbar:
-            # Get new sample
             x, y = next(self.dataset)
             x, y = x.to(self.device), y.to(self.device)
 
-            # Forward pass and loss computation
             loss, accuracy = self.compute_metrics(self.model(x), y)
+            (loss / self.accumulation_steps).backward()
 
-            loss = (
-                loss / self.accumulation_steps
-            )  # Scale the loss for accumulation
-            loss.backward()
-
-            # Accumulate loss and increment the counter
             accumulated_loss += loss
+            accumulated_accuracy += accuracy
             accumulation_counter += 1
 
-            # Update the model parameters every accumulation_steps
-            if accumulation_counter % self.accumulation_steps == 0:
+            if accumulation_counter == self.accumulation_steps:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-                # Log the metrics
+
                 self.metric_tracker.step(
-                    accumulated_loss.item(), accuracy.item()
+                    accumulated_loss.item(),
+                    (accumulated_accuracy / self.accumulation_steps).item(),
                 )
                 accumulated_loss = 0.0
+                accumulated_accuracy = 0.0
+                accumulation_counter = 0
+
                 if self.metric_tracker.stop_training:
                     break
                 if self.scheduler is not None:
