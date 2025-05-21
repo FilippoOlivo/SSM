@@ -9,7 +9,27 @@ In this section we will describe the results obtained from the experiments condu
 
 ## Accuracy
 
+In this section we present the accuracy results for different models. The accuracy is measured in terms of the percentage of correct predictions made by the model on the test set. The plot below shows the accuracy results for different models.
 
+![Accuracy](./img/accuracy.png)
+
+The same data are repored in the table below:
+
+| Model          | 256  | 512  | 784  |
+|----------------|------|------|------|
+| S4D Real       | 0.54 | 0.44 | 0.45 |
+| S4D Inv        | 0.53 | 0.53 | 0.53 |
+| S4 Low Rank    | 0.67 | 0.7  | 0.71 |
+| S6             | 0.95 | 0.97 | 0.97 |
+| Mamba S4D Real | 0.56 | 0.52 | 0.51 |
+| Mamba S4D Inv  | 0.75 | 0.67 | 0.78 |
+| Mamba S4 LR    | 0.74 | 0.7  | 0.68 |
+| Mamba S6       | 1.0  | 1.0  | 1.0  |
+| Gated MLP      | 0.07 | 0.07 | 0.07 |
+| Transformer    | 0.2  | 0.2  | 0.2  |
+| LSTM           | 0.12 | 0.14 | 0.1  |
+
+The S6 model is the best performing model, achieving 100% accuracy on all datasets. The Mamba architecture improves the performance of the S4D models, with Mamba S6 achieving 100% accuracy. Moreover, the introduction of Mamba architecture leads always to an increase of the accuracy. The Gated MLP and Transformer models perform poorly compared to the other models, with very low accuracy. The LSTM model performs slightly better than the Gated MLP and Transformer models, but still significantly worse than the other models.
 
 ## Time
 
