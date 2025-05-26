@@ -1,21 +1,21 @@
 # Results
 
-In this section we will describe the results obtained from the experiments conducted in this project. Specifically, we will focus on the following aspects:
+This section describes the results obtained from the experiments conducted as part of this project. Specifically, evaluation focuses on the following key aspects:
 
-- **Accuracy**: The performance of the model in terms of accuracy.
+- **Accuracy**: The performance of each model in terms of accuracy.
 - **Time**: The time taken to train the model and make predictions.
 - **Memory**: The amount of GPU memory used during training.
-- **GPU Usage**: The GPU utilization during training.
+- **GPU Usage**: The GPU usage during training.
 
-All the test have been conducted on a single NVIDIA RTX A4000 with 16GB of GPU memory. The model have been trained on selective copy task with different input sizes (256, 512, 784) and constant number of tokens to memorize (16). The models have been trained for 200000 epochs with a batch size of 64 using Adam optimizer with a learning rate of 0.0001. Moreover, we implemented a early stopping mechanism that stops the training when the accuracy on the validation set does not improve for 5000 steps. 
+All experiments have been performed on a single NVIDIA RTX A4000 GPU with 16 GB of memory. Each model has been trained on a selective copy task using different input sizes (256, 512, 784), while keeping the number of tokens to memorize fixed at 16. Training was performed for up to 200000 epochs with a batch size of 64, using the Adam optimizer with a learning rate of 0.0001. To avoid overfitting and reduce training time, an early stopping mechanism has been implemented: training was terminated if the validation accuracy did not improve for 5000 steps.
 
 ## Accuracy
 
-In this section we present the accuracy results for different models. The accuracy is measured in terms of the percentage of correct predictions made by the model on the test set. The plot below shows the accuracy results for different models.
+In this section, we present the accuracy results across different models. Accuracy is reported as the percentage of correct predictions on the test set. The figure below shows the performance of each model, highlighting how accuracy varies with different configurations.
 
 ![Accuracy](./img/accuracy.png)
 
-The same data are repored in the table below:
+The same data are reported in the table below:
 
 | Model          | 256  | 512  | 784  |
 |----------------|------|------|------|
@@ -31,18 +31,20 @@ The same data are repored in the table below:
 | Transformer    | 0.2  | 0.2  | 0.2  |
 | LSTM           | 0.12 | 0.14 | 0.1  |
 
-The S6 model is the best performing model, achieving 100% accuracy on all datasets. The Mamba architecture improves the performance of the S4D models, with Mamba S6 achieving 100% accuracy. Moreover, the introduction of Mamba architecture leads always to an increase of the accuracy. The Gated MLP and Transformer models perform poorly compared to the other models, with very low accuracy. The LSTM model performs slightly better than the Gated MLP and Transformer models, but still significantly worse than the other models.
+Among all evaluated models, Mamba + S6 achieved the best performance, consistently reaching 100% accuracy across all datasets. The integration of the Mamba architecture significantly enhanced the performance of the S4 model, and more broadly, it consistently improved accuracy across all model variants.
+
+In contrast, the Gated MLP and Transformer models showed poor performance, with significantly lower accuracy compared to other architectures. The LSTM model performed slightly better than Gated MLP and Transformer, but still lagged behind the top-performing models by a considerable margin.
 
 ## Time
 
-In this section we present the training and inference times for different models. 
+This section presents the training and inference times for the different models evaluated.
 
 ### Training Time
-Here we present the training times for different models. The training times are measured in seconds and they represent the time taken to complete a single step of training (forward + backward).
+The training time is measured in seconds and represents the duration required to complete a single training step, including both the forward and backward passes. The results below compare the per-step training times across models, highlighting differences in computational efficiency.
 
 ![Times](./img/training_times.png)
 
-The same data are repored in the table below:
+The same data are reported in the table below:
 
 | Model          | 256    | 512    | 784    |
 |----------------|--------|--------|--------|
@@ -59,15 +61,19 @@ The same data are repored in the table below:
 | Transformer    | 5.06   | 7.59   | 10.68  |
 | LSTM           | 1.24   | 1.51   | 1.79   |
 
-From both the table and the figure we can see that the S4 model is the slowest to train, with a huge gap with the other models. The S4D models are significantly faster, with the S4D Real being the fastest. Moreover, the introduction of the Mamba architecture always lead to a significant increase of the training time. As it regard S6 model we can see that it is significantly slower than the S4D models, but still faster than the S4 model. This is due the recurrent nature of the S6 model, which requires more time to compute the forward and backward passes. A more efficient implementation of parallel scannning routine in S6 could lead to a significant speedup with performance comparable to the other architectures. As it regards LSTM and Transformer architecture, we can see that they are close to the S4D models, but way faster than S6. 
+Both the table and figure clearly show that the S4 model is the slowest to train, with a substantial time gap compared to all other models. In contrast, S4D models are significantly faster, with S4D Real being the most efficient among them.
+
+The introduction of the Mamba architecture consistently leads to a noticeable increase in training time across all model variants. Regarding the S6 model, it is considerably slower than the S4D models but still faster than the original S4. This increased training time is primarily due to the model’s recurrent structure, which adds computational overhead during the forward and backward passes. However, a more optimized implementation of the parallel scanning routine in S6 could potentially reduce this gap and bring its performance closer to that of other architectures.
+
+As for the LSTM and Transformer models, their training times are comparable to the S4D models and significantly faster than S6.
 
 ### Inference Time
 
-Here we present the inference times for different models. The inference times are measured in seconds and they represent the time taken to complete a single step of inference (forward without gradients).
+This section presents the inference times for the different models. Inference time is measured in seconds and reflects the duration required to complete a single forward pass (without gradient computation).
 
 ![Inference Times](./img/inference_times.png)
 
-The same data are repored in the table below:
+The same data are reported in the table below:
 
 | Model          | 256  | 512   | 784   |
 |----------------|------|-------|-------|
@@ -84,15 +90,17 @@ The same data are repored in the table below:
 | Transformer    | 0.12 | 0.13  | 0.14  |
 | LSTM           | 0.07 | 0.09  | 0.1   |
 
-Comparing the results of inference times with the training times we can see that the latter are significantly higher. This is due to the fact that during training we need to compute the gradients and update the weights, while during inference we only need to compute the forward pass. The S4 model is still the slowest, but the gap with the other models is smaller. The S6 model is still slower than Transformer and LSTM based models.
+Comparing inference times to training times, we observe that training is significantly slower across all models. This is expected, as training involves not only the forward pass but also gradient computation and weight updates, whereas inference requires only the forward pass.
+
+While the S4 model remains the slowest during inference, the performance gap between it and the other models is smaller than during training. The S6 model continues to be slower than both Transformer and LSTM models, reflecting its inherently more complex recurrent computations even in the absence of backpropagation.
 
 ## Memory
 
-Here we present the GPU memory usage for different models. The memory usage is measured in MB and it represents the amount of GPU memory used during training. The plot below shows the memory usage for different models.
+This section presents the GPU memory usage of the different models during training. Memory usage is measured in megabytes (MB) and reflects the total amount of GPU memory consumed throughout the training process. The plot below illustrates the memory footprint of each model, enabling a comparison of their computational resource requirements.
 
 ![Memory](./img/gpu_memory.png)
 
-The same data are repored in the table below:
+The same data are reported in the table below:
 
 | Model          | 256    | 512    | 784     |
 |----------------|--------|--------|---------|
@@ -109,16 +117,15 @@ The same data are repored in the table below:
 | Transformer    | 655.7  | 759.7  | 849.7   |
 | LSTM           | 585.7  | 673.7  | 739.7   |
 
-As we can see from both the table and the figure, all the models except S6, and its Mamba version, are using a similar amount of memory. The S6 model is the one that uses the most memory, with a huge gap with the other models. The Mamba architecture leads to a significant increase of the memory usage.
+As shown in both the table and the figure, all models—except S6 and its Mamba variant—exhibit similar GPU memory usage during training. The S6 model consumes the most memory, with a substantial margin compared to the others. Additionally, incorporating the Mamba architecture leads to a noticeable increase in memory usage across the models.
 
 ## GPU Usage
 
-Here we present the GPU usage for different models. The GPU usage is measured in percentage and it represents the amount of GPU computational power used during
-training. The plot below shows the GPU usage for different models.
+This section presents the GPU utilization of the different models during training. GPU usage is measured as a percentage and reflects the proportion of available GPU computational resources utilized throughout the training process. The plot below illustrates GPU usage across models, highlighting differences in computational efficiency and hardware utilization.
 
 ![GPU Usage](./img/gpu_util.png)
 
-The same data are repored in the table below:
+The same data are reported in the table below:
 
 | Model          | 256   | 512   | 784   |
 |----------------|-------|-------|-------|
@@ -135,4 +142,6 @@ The same data are repored in the table below:
 | Transformer    | 44.77 | 66.57 | 82.49 |
 | LSTM           | 39.61 | 45.82 | 55.4  |
 
-As we can see from both the table and the figure, the GPU utilization is quite low for all the models except S6, its Mamba version the Transformers model. Moreover, the introduction of Mamba always leads to an increase of the GPU utilization. The S4 model is the one that uses the least amount of GPU computational power: this results, combined the huge computational times confirm the inefficiency of the S4 model. As the sequence length increases, the GPU utilization increases for all the models.
+As we can see from both the table and the figure, the GPU utilization is quite low for all the models except S6, its Mamba version the Transformers model. Moreover, the introduction of Mamba always leads to an increase of the GPU utilization.
+
+The S4 model exhibits the lowest GPU usage, which, combined with its long training times, highlights its computational inefficiency. Furthermore, GPU utilization increases with longer sequence lengths across all models, reflecting the growing computational demands.
